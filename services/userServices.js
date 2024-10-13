@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 
 const { User } = require('../models/userModel');
 
-
 const registerUser = async (userData) => {
     const { first_name, last_name, email, phone_no, role, password } = userData;
 
