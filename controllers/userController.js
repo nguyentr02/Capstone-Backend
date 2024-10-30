@@ -14,12 +14,13 @@ const registerUserCont = async (req, res) => {
 
 const loginUserCont = async (req, res) => {
     try {
-        const token = await loginUser(req.body.email, req.body.password);
+        const { email, password } = req.body;
+        const token = await loginUser(email, password);
         res.status(200).json({ token });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-module.exports = { registerUser, loginUser };
+module.exports = { registerUserCont, loginUserCont };
 
