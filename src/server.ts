@@ -1,25 +1,23 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+import express from 'express';
+import {}
 
-const express = require('express');
-const pool = require('./config/database');  // Import the database connection
+import userRoutes from './routes/userRoutes';
 
-const app = express();
+dotenv.config();
+
+const app: express.Application = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares to parse the incoming request data
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Import routes
-const userRoutes = require('./routes/userRoutes');
-
-// Routes
+//Routes
 app.use('/api/users', userRoutes);
 
-//Define a simple route for testing
-app.get('/', (req, res) => {
-    res.json({ message: 'Welcome to the application' });
-});
+// Database connection
+
 
 
 // Start server

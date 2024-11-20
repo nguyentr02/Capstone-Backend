@@ -4,21 +4,34 @@
   "main": "db.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "start": "node dist/server.js",
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "watch": "tsc -w"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.9.1",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.3",
-    "nodemon": "^3.1.7"
+    "reflect-metadata": "^0.2.2",
+    "sequelize-typescript": "^2.1.6",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@types/sequelize": "^4.28.20",
+    "nodemon": "^3.1.7",
+    "prisma": "^5.22.0",
     "typescript": "^5.6.3"
   }
 }

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `User`  (
   `created_at` DATETIME,
   `password` varchar(255)
 );
-
+
 CREATE TABLE IF NOT EXISTS `Questionnaire_Response`  (
   `ques_response_id` integer PRIMARY KEY AUTO_INCREMENT,
   `questionnaire_id` integer,
