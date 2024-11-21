@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import {}
+
 
 import userRoutes from './routes/userRoutes';
 
@@ -18,8 +18,6 @@ app.use('/api/users', userRoutes);
 
 // Database connection
 
-
-
 // Start server
 app.listen(PORT, async () => {
     try {
@@ -32,7 +30,4 @@ app.listen(PORT, async () => {
         process.exit(1);
     }
 });
-// // Start the Express server
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });
+
