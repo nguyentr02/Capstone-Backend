@@ -1,9 +1,24 @@
-import express from 'express';
-import authRoutes from './routes/authRoutes';
+import dotenv from 'dotenv';
+import app from './app';
+import { prisma } from './config/prisma';
 
-const app = express();
+dotenv.config();
 
-app.use(express.json());  // Middleware to parse JSON body
-app.use('/api/auth', authRoutes);
+const PORT = process.env.PORT || 3000;
 
-export default app;
+const startServer = async () => {
+    try {
+        await prisma.$connect();
+        console.log('Connected to database');
+
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Error starting server:', error);
+        process.exit(1);
+    }
+};
+
+startServer();
