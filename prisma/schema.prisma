@@ -30,13 +30,12 @@ model Event {
   name            String
   description     String?       @db.Text
   location        String?
-  eventStartDate  DateTime      @map("event_start_date")
-  eventEndDate    DateTime      @map("event_end_date")
-  eventStartTime  String        @map("event_start_time")
-  eventEndTime    String        @map("event_end_time")
+  startDateTime  DateTime      @map("start_datetime")
+  endDateTime   DateTime      @map("end_datetime")
   status          EventStatus   @default(DRAFT)
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
+  
   // Relations
   organizer       User          @relation("EventOrganizer", fields: [organiserId], references: [id])
   tickets         Ticket[]
