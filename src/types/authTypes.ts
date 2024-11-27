@@ -27,3 +27,11 @@ export interface JwtPayload {
     role: UserRole;
 }
 
+// Extend Express Request type to include user information
+declare global {
+    namespace Express {
+        interface Request {
+            user?: JwtPayload
+        }
+    }
+}

@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { RegisterDto, LoginDto, AuthResponse, JwtPayload } from "../types/auth";
+import { RegisterDto, LoginDto, AuthResponse, JwtPayload } from "../types/authTypes";
 import { AuthenticationError, ValidationError} from "../utils/errors";
 
 import bcrypt from 'bcrypt';

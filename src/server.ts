@@ -1,33 +1,9 @@
-import dotenv from 'dotenv';
 import express from 'express';
+import authRoutes from './routes/authRoutes';
 
+const app = express();
 
-import userRoutes from './routes/userRoutes';
+app.use(express.json());  // Middleware to parse JSON body
+app.use('/api/auth', authRoutes);
 
-dotenv.config();
-
-const app: express.Application = express();
-const PORT = process.env.PORT || 3000;
-
-// Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-//Routes
-app.use('/api/users', userRoutes);
-
-// Database connection
-
-// Start server
-app.listen(PORT, async () => {
-    try {
-        // Test database connection
-        await pool.query('SELECT 1');
-        console.log('Database connection successful');
-        console.log(`Server is running on port ${PORT}`);
-    } catch (error) {
-        console.error('Database connection failed:', error);
-        process.exit(1);
-    }
-});
-
+export default app;
