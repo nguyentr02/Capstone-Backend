@@ -1,33 +1,24 @@
 import dotenv from 'dotenv';
-import express from 'express';
-
-
-import userRoutes from './routes/userRoutes';
+import app from './app';
+import { prisma } from './config/prisma';
 
 dotenv.config();
 
-const app: express.Application = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-//Routes
-app.use('/api/users', userRoutes);
-
-// Database connection
-
-// Start server
-app.listen(PORT, async () => {
+const startServer = async () => {
     try {
-        // Test database connection
-        await pool.query('SELECT 1');
-        console.log('Database connection successful');
-        console.log(`Server is running on port ${PORT}`);
+        await prisma.$connect();
+        console.log('Connected to database');
+
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
     } catch (error) {
-        console.error('Database connection failed:', error);
+        console.error('Error starting server:', error);
         process.exit(1);
     }
-});
+};
 
+startServer();
