@@ -1,43 +1,74 @@
 import {prisma} from '../config/prisma';
 import { Event, User} from '@prisma/client';
+import { EventError } from '../utils/errors';
+import { CreateEventDTO, EventFilters, EventResponse } from '../types/eventTypes';
 
 export class EventService {
 
     // Create a new event
-    static async createEvent(organizerId: number, eventData: {
-        name: string,
-        description?: string,
-        location: string,
-        eventStartDate: Date,
-        eventEndDate: Date,
-        eventStartTime: string
-        eventEndTime: string,
-    }){
+    static async createEvent(organizerId: number, eventData: CreateEventDTO): Promise<Event> {
+
+        // Convert string dates to Date objects
+        const startDateTime = new Date(eventData.startDateTime);
+        const endDateTime = new Date(eventData.endDateTime);
+
+        // Check if end time is after start time
+        if (endDateTime <= eventData.startDateTime) {
+            throw new EventError('End time must be after start time');
+        }
+
+        // Check if event is scheduled in the past
+        if (startDateTime < new Date()) {
+            throw new EventError('Event cannot be scheduled in the past');
+        }
+
         return prisma.event.create({
             data: {
-                ...eventData,
-                organiserId: organizerId,
-                status: "DRAFT"
+                name: eventData.name,
+                description: eventData.description,
+                location: eventData.location,
+                startDateTime, 
+                endDateTime,
+                status: 'DRAFT',
+                organizer: {
+                    connect: {
+                        id: organizerId
+                    }
+                }
             },
             include: {
-                organizer: true
+                organizer: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                }
             }
         });
     }
     
-    // Get all events
-    static async getEvents(filters? : {
-        status?: string,
-        location?: string,
-        startDate?: Date,
-        endDate?: Date
-    }) {
-        return prisma.event.findMany({
-            where: filters,
+    // Get event by ID
+    static async getEventById(eventId: number): Promise<EventResponse> {
+        const event = await prisma.event.findUnique({
+            where: {id: eventId},
             include: {
-                organizer: true
+                organizer: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                }
             }
         });
 
+        if (!event) {
+            throw new EventError('Event not found');
+        }
+
+        return event as EventResponse;
     }
+
+    // Get all events with optional filters
 }
