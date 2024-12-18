@@ -7,7 +7,6 @@ export class EventService {
 
     // Create a new event
     static async createEvent(organizerId: number, eventData: CreateEventDTO): Promise<Event> {
-
         // Convert string dates to Date objects
         const startDateTime = new Date(eventData.startDateTime);
         const endDateTime = new Date(eventData.endDateTime);
@@ -71,4 +70,5 @@ export class EventService {
     }
 
     // Get all events with optional filters
+    
 }

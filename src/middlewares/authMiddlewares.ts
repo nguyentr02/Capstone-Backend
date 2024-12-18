@@ -9,7 +9,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
         const token = req.header('Authorization')?.replace('Bearer ', '');
 
         if (!token) {
-            throw new AuthenticationError('Authentication required');
+            throw new AuthenticationError('Invalid token');
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
@@ -19,13 +19,14 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
         next();
     }
     catch (error) {
-        next(new AuthenticationError('Invalid token'));
+        next(error);
     }
 }
 
 // Middleware to authorize user roles
 export const authorize = (...roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
+
         if (!req.user) {
             return next(new AuthenticationError('Authentication required'));
         }
