@@ -7,173 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            Int            @id @default(autoincrement()) @map("user_id")
-  firstName     String         @map("first_name")
-  lastName      String         @map("last_name")
-  email         String         @unique
-  phoneNo       String?        @map("phone_no")
-  role          UserRole       @default(PARTICIPANT)
-  password      String
-  active        Boolean        @default(true)
-  createdAt     DateTime       @default(now()) @map("created_at")
-  // Relations
-  organizedEvents Event[]      @relation("EventOrganizer")
-  registrations   Registration[]
-  
-  @@map("User")
-}
-
-model Event {
-  id              Int           @id @default(autoincrement()) @map("event_id")
-  organiserId     Int          @map("organiser_id")
-  name            String
-  description     String?       @db.Text
-  location        String?
-  startDateTime  DateTime      @map("start_datetime")
-  endDateTime   DateTime      @map("end_datetime")
-  status          EventStatus   @default(DRAFT)
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-  
-  // Relations
-  organizer       User          @relation("EventOrganizer", fields: [organiserId], references: [id])
-  tickets         Ticket[]
-  registrations   Registration[]
-  questionnaire   Questionnaire?
-  
-  @@map("Event")
-}
-
-model Registration {
-  id               Int              @id @default(autoincrement()) @map("registration_id")
-  userId           Int              @map("user_id")
-  eventId          Int              @map("event_id")
-  status           RegistrationStatus @default(PENDING)
-  registrationDate DateTime         @default(now()) @map("registration_date")
-  // Relations
-  user             User             @relation(fields: [userId], references: [id])
-  event            Event            @relation(fields: [eventId], references: [id])
-  ticketPurchases  TicketPurchase[]
-  questionResponses QuestionResponse[]
-  
-  @@map("Registration")
-}
-
-model Ticket {
-  id            Int              @id @default(autoincrement()) @map("ticket_id")
-  eventId       Int              @map("event_id")
-  name          String
-  description   String?          @db.Text
-  price         Decimal          @db.Decimal(10, 2)
-  quantityTotal Int              @map("quantity_total")
-  quantitySold  Int              @default(0) @map("quantity_sold")
-  salesStart    DateTime?        @map("sales_start")
-  salesEnd      DateTime?        @map("sales_end")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-  // Relations
-  event         Event            @relation(fields: [eventId], references: [id])
-  purchases     TicketPurchase[]
-  
-  @@map("Ticket")
-}
-
-model TicketPurchase {
-  id              Int       @id @default(autoincrement()) @map("purchase_id")
-  registrationId  Int       @map("registration_id")
-  ticketId        Int       @map("ticket_id")
-  quantity        Int
-  unitPrice       Decimal   @map("unit_price") @db.Decimal(10, 2)
-  totalPrice      Decimal   @map("total_price") @db.Decimal(10, 2)
-  createdAt       DateTime  @default(now()) @map("created_at")
-  // Relations
-  registration    Registration @relation(fields: [registrationId], references: [id])
-  ticket          Ticket      @relation(fields: [ticketId], references: [id])
-  payment         Payment?
-  
-  @@map("TicketPurchase")
-}
-
-model Questionnaire {
-  id          Int               @id @default(autoincrement()) @map("questionnaire_id")
-  eventId     Int               @unique @map("event_id")
-  title       String
-  description String?           @db.Text
-  status      QuestionnaireStatus @default(DRAFT)
-  createdAt   DateTime          @default(now()) @map("created_at")
-  updatedAt   DateTime          @updatedAt @map("updated_at")
-  // Relations
-  event       Event             @relation(fields: [eventId], references: [id])
-  questions   Question[]
-  
-  @@map("Questionnaire")
-}
-
-model Question {
-  id              Int           @id @default(autoincrement()) @map("question_id")
-  questionnaireId Int           @map("questionnaire_id")
-  questionText    String        @map("question_text") @db.Text
-  questionType    QuestionType  @default(TEXT) @map("question_type")
-  isRequired      Boolean       @default(false) @map("is_required")
-  orderIndex      Int           @map("order_index")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-  // Relations
-  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id])
-  options         QuestionOption[]
-  responses       QuestionResponse[]
-  
-  @@map("Question")
-}
-
-model QuestionOption {
-  id           Int               @id @default(autoincrement()) @map("option_id")
-  questionId   Int               @map("question_id")
-  optionText   String           @map("option_text")
-  orderIndex   Int              @map("order_index")
-  createdAt    DateTime         @default(now()) @map("created_at")
-  // Relations
-  question     Question         @relation(fields: [questionId], references: [id])
-  responses    QuestionResponse[]
-  
-  @@map("QuestionOption")
-}
-
-model QuestionResponse {
-  id               Int          @id @default(autoincrement()) @map("response_id")
-  registrationId   Int          @map("registration_id")
-  questionId       Int          @map("question_id")
-  responseText     String?      @map("response_text") @db.Text
-  selectedOptionId Int?         @map("selected_option_id")
-  submittedAt      DateTime     @default(now()) @map("submitted_at")
-  // Relations
-  registration     Registration @relation(fields: [registrationId], references: [id])
-  question         Question     @relation(fields: [questionId], references: [id])
-  selectedOption   QuestionOption? @relation(fields: [selectedOptionId], references: [id])
-  
-  @@map("QuestionResponse")
-}
-
-model Payment {
-  id            Int           @id @default(autoincrement()) @map("payment_id")
-  purchaseId    Int          @unique @map("purchase_id")
-  amount        Decimal       @db.Decimal(10, 2)
-  paymentMethod PaymentMethod @map("payment_method")
-  paymentStatus PaymentStatus @default(PENDING) @map("payment_status")
-  transactionId String?       @map("transaction_id")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
-  // Relations
-  purchase      TicketPurchase @relation(fields: [purchaseId], references: [id])
-  
-  @@map("Payment")
-}
-
 enum UserRole {
   PARTICIPANT
   ORGANIZER
   ADMIN
+}
+
+enum EventType {
+  SPORTS
+  MUSICAL
+  SOCIAL
+  VOLUNTEERING
 }
 
 enum EventStatus {
@@ -183,16 +27,10 @@ enum EventStatus {
   COMPLETED
 }
 
-enum RegistrationStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-}
-
-enum QuestionnaireStatus {
-  DRAFT
+enum TicketStatus {
   ACTIVE
-  CLOSED
+  INACTIVE
+  SOLD_OUT
 }
 
 enum QuestionType {
@@ -200,6 +38,15 @@ enum QuestionType {
   MULTIPLE_CHOICE
   CHECKBOX
   DROPDOWN
+  DATE
+  EMAIL
+  PHONE
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
 
 enum PaymentMethod {
@@ -213,4 +60,168 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+model User {
+  id        Int      @id @default(autoincrement()) @map("user_id")
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String   @unique
+  phoneNo   String?  @map("phone_no")
+  role      UserRole @default(PARTICIPANT)
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organizedEvents Event[]        @relation("EventOrganizer")
+  registrations   Registration[]
+
+  @@map("users")
+}
+
+model Event {
+  id            Int         @id @default(autoincrement()) @map("event_id")
+  organiserId   Int         @map("organiser_id")
+  name          String
+  description   String?     @db.Text
+  location      String
+  capacity      Int
+  eventType     EventType   @map("event_type")
+  startDateTime DateTime    @map("start_datetime")
+  endDateTime   DateTime    @map("end_datetime")
+  status        EventStatus @default(DRAFT)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  organizer      User             @relation("EventOrganizer", fields: [organiserId], references: [id])
+  tickets        Ticket[]
+  registrations  Registration[]
+  eventQuestions EventQuestions[]
+
+  @@map("events")
+}
+
+model Question {
+  id              Int          @id @default(autoincrement()) @map("question_id")
+  questionText    String       @map("question_text") @db.Text
+  questionType    QuestionType @default(TEXT) @map("question_type")
+  category        String?
+  validationRules Json?        @map("validation_rules")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  eventQuestions EventQuestions[]
+
+  @@map("questions")
+}
+
+model EventQuestions {
+  id           Int     @id @default(autoincrement()) @map("event_question_id")
+  eventId      Int     @map("event_id")
+  questionId   Int     @map("question_id")
+  isRequired   Boolean @default(false) @map("is_required")
+  displayOrder Int     @map("display_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  //Relations
+  event     Event      @relation(fields: [eventId], references: [id])
+  question  Question   @relation(fields: [questionId], references: [id])
+  responses Response[]
+
+  @@map("event_questions")
+}
+
+model Response {
+  id             Int    @id @default(autoincrement()) @map("response_id")
+  registrationId Int    @map("registration_id")
+  eqId           Int    @map("eq_id")
+  responseText   String @map("response_text") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  registration  Registration   @relation(fields: [registrationId], references: [id])
+  eventQuestion EventQuestions @relation(fields: [eqId], references: [id])
+
+  @@map("responses")
+}
+
+model Registration {
+  id      Int                @id @default(autoincrement()) @map("registration_id")
+  userId  Int?               @map("user_id")
+  eventId Int                @map("event_id")
+  status  RegistrationStatus @default(PENDING)
+
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User?      @relation(fields: [userId], references: [id])
+  event     Event      @relation(fields: [eventId], references: [id])
+  purchase  Purchase?
+  responses Response[]
+
+  @@map("registrations")
+}
+
+model Ticket {
+  id            Int          @id @default(autoincrement()) @map("ticket_id")
+  eventId       Int          @map("event_id")
+  name          String
+  description   String?      @db.Text
+  price         Decimal      @db.Decimal(10, 2)
+  quantityTotal Int          @map("quantity_total")
+  quantitySold  Int          @default(0) @map("quantity_sold")
+  salesStart    DateTime?    @map("sales_start")
+  salesEnd      DateTime?    @map("sales_end")
+  status        TicketStatus @default(ACTIVE)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  event     Event      @relation(fields: [eventId], references: [id])
+  purchases Purchase[]
+
+  @@map("tickets")
+}
+
+model Purchase {
+  id             Int     @id @default(autoincrement()) @map("purchase_id")
+  registrationId Int     @unique @map("registration_id")
+  ticketId       Int     @unique @map("ticket_id")
+  quantity       Int
+  unitPrice      Decimal @map("unit_price") @db.Decimal(10, 2)
+  totalPrice     Decimal @map("total_price") @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+
+  // Relations
+  registration Registration @relation(fields: [registrationId], references: [id])
+  ticket       Ticket       @relation(fields: [ticketId], references: [id])
+  payment      Payment?
+
+  @@map("purchases")
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement()) @map("payment_id")
+  purchaseId    Int           @unique @map("purchase_id")
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @map("payment_method")
+  status        PaymentStatus @default(PENDING) @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  purchase Purchase @relation(fields: [purchaseId], references: [id])
+
+  @@map("payments")
 }
