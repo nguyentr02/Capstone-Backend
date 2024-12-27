@@ -87,29 +87,4 @@ export class AuthService {
         return { user: userWithoutPassword, token };
     }
 
-    // get user profile with related data
-    static async getProfile(userId: number) {
-        const user = await prisma.user.findUnique({
-            where: {
-                id: userId
-            },
-            include: {
-                registrations: {
-                    include: {
-                        event: true,
-                        ticketPurchases: true
-                    }
-                }
-            }
-        });
-
-        if (!user) {
-            throw new ValidationError('User not found');
-        }
-
-        const { password: userPassword, ...userWithoutPassword } = user;
-
-        return userWithoutPassword;
-    }
-
 }

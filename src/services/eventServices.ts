@@ -1,74 +1,57 @@
 import {prisma} from '../config/prisma';
 import { Event, User} from '@prisma/client';
 import { EventError } from '../utils/errors';
-import { CreateEventDTO, EventFilters, EventResponse } from '../types/eventTypes';
+import { CreateEventDTO, EventResponse } from '../types/eventTypes';
 
 export class EventService {
 
     // Create a new event
-    static async createEvent(organizerId: number, eventData: CreateEventDTO): Promise<Event> {
-        // Convert string dates to Date objects
-        const startDateTime = new Date(eventData.startDateTime);
-        const endDateTime = new Date(eventData.endDateTime);
-
-        // Check if end time is after start time
-        if (endDateTime <= eventData.startDateTime) {
-            throw new EventError('End time must be after start time');
-        }
-
-        // Check if event is scheduled in the past
-        if (startDateTime < new Date()) {
-            throw new EventError('Event cannot be scheduled in the past');
-        }
-
-        return prisma.event.create({
-            data: {
-                name: eventData.name,
-                description: eventData.description,
-                location: eventData.location,
-                startDateTime, 
-                endDateTime,
-                status: 'DRAFT',
-                organizer: {
-                    connect: {
-                        id: organizerId
-                    }
+    static async createEvent(organizerId: number, eventData: CreateEventDTO) {
+        return prisma.$transaction( async (tx) => {
+            // 1 - Create the event
+            const event = await tx.event.create({
+                data: {
+                    organiserId: organizerId,
+                    name: eventData.name,
+                    description: eventData.description,
+                    location: eventData.location,
+                    capacity: eventData.capacity,
+                    eventType: eventData.eventType,
+                    startDateTime: new Date(eventData.startDateTime),
+                    endDateTime: new Date(eventData.endDateTime),
+                    status: 'DRAFT'
                 }
-            },
-            include: {
-                organizer: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true
-                    }
-                }
-            }
+            });
+
+            // 2 - Create the questions and link them to the event
+            const eventQuestions = await Promise.all(
+                // Map over the questions array
+                eventData.questions.map(async (q) => { 
+                    // 2.1 - Create the question
+                    const question = await tx.question.create({
+                        data : {
+                            questionText: q.questionText,
+                            questionType: 'TEXT',
+                        }
+                    });  
+                    
+                    // 2.2 - Link the question to the event
+                    return tx.eventQuestions.create({
+                        data : {
+                            eventId: event.id,
+                            questionId: question.id,
+                            isRequired: q.isRequired,
+                            displayOrder: q.displayOrder
+                        }
+                    });
+                })
+            );
+
+            return {
+                ...event,
+                questions: eventQuestions
+            };
         });
-    }
-    
-    // Get event by ID
-    static async getEventById(eventId: number): Promise<EventResponse> {
-        const event = await prisma.event.findUnique({
-            where: {id: eventId},
-            include: {
-                organizer: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true
-                    }
-                }
-            }
-        });
-
-        if (!event) {
-            throw new EventError('Event not found');
-        }
-
-        return event as EventResponse;
-    }
-
-    // Get all events with optional filters
+    };
     
 }

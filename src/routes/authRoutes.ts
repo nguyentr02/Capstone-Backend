@@ -6,7 +6,6 @@ const router = Router();
 
 router.post('/register', AuthController.registerUser);
 router.post('/login', AuthController.loginUser);
-router.get('/profile', authenticate, AuthController.getUserProfile);
 
 // TODO: Separate routes for different (3) user roles and attach middlewares to groups
 

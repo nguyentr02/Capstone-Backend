@@ -4,16 +4,16 @@ export interface CreateEventDTO {
     name: string,
     description?: string,
     location: string,
-    startDateTime: Date | string,
-    endDateTime: Date | string,
-}
+    capacity: number,
+    eventType: 'SPORTS' | 'MUSICAL' | 'SOCIAL' | 'VOLUNTEERING',
 
-// Filters for event data
-export interface EventFilters {
-    status?: string,
-    location?: string, 
     startDateTime: Date | string,
     endDateTime: Date | string,
+    questions: Array<{
+        questionText: string;
+        isRequired: boolean;
+        displayOrder: number;  
+    }>
 }
 
 // Response for event data

@@ -53,31 +53,4 @@ export class AuthController {
             }
         }
     }
-
-    static async getUserProfile(req: Request, res: Response) {
-        try {
-            const userId = req.user?.user_id;
-            if (!userId) {
-                throw new AppError(401, 'Unauthorized');
-            }
-
-            const profile = await AuthService.getProfile(userId);
-            res.json({
-                success: true,
-                data: profile
-            });
-        } catch (error) {
-            if (error instanceof AppError) {
-                res.status(error.statusCode).json({
-                    success: false,
-                    message: error.message
-                });
-            } else {
-                res.status(500).json({
-                    success: false,
-                    message: 'Internal server error'
-                });
-            }
-        }
-    }
 }
