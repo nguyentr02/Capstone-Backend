@@ -54,4 +54,66 @@ export class EventService {
         });
     };
     
+    // Get all events
+    static async getAllEvents() {
+        return prisma.event.findMany({
+            include: {
+                organizer: {
+                    select: {
+                        firstName: true,
+                        lastName: true
+                    }
+                },
+                eventQuestions: {
+                    include: {
+                        question: true
+                    }
+                }
+            }
+        });
+    }
+
+    //Get single event
+    static async getEventById(eventId: number) {
+        return prisma.event.findUnique({
+            where: { id: eventId },
+            include: {
+                organizer: {
+                    select: {
+                        firstName: true,
+                        lastName: true
+                    }
+                },
+                eventQuestions: {
+                    include: {
+                        question: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // Update event
+    static async updateEvent (eventId: number, eventData: Partial<CreateEventDTO>) {
+        return prisma.event.update({
+            where: { id: eventId },
+            data: {
+                name: eventData.name,
+                description: eventData.description,
+                location: eventData.location,
+                capacity: eventData.capacity,
+                eventType: eventData.eventType,
+                startDateTime: eventData.startDateTime,
+                endDateTime: eventData.endDateTime,
+            }
+        });
+    }
+
+
+    // Delete event
+    static async deleteEvent(eventId: number) {
+        return prisma.event.delete({
+            where: { id: eventId }
+        });
+    }
 }
