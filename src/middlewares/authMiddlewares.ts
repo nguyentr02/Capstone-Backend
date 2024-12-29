@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { AuthenticationError } from '../utils/errors';
 import { JwtPayload } from '../types/authTypes';
 
-// Middleware to authenticate user
+// Middleware to authenticate (must be logged in)
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -23,7 +23,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     }
 }
 
-// Middleware to authorize user roles
+// Middleware to authorize user roles (only certain roles can access)
 export const authorize = (...roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
 
