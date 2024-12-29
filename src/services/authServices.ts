@@ -87,4 +87,8 @@ export class AuthService {
         return { user: userWithoutPassword, token };
     }
 
+    static async refreshToken(token: string) : Promise<TokenPair> {
+        
+    }
+
 }

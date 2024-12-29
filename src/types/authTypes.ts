@@ -13,6 +13,11 @@ export interface LoginDto {
     password: string;
 }
 
+export interface TokenPair {
+    accessToken: string;
+    refreshToken: string;
+}
+
 // User object without password
 export interface AuthResponse {
     user: Omit<User, 'password'>; // Omit password from User when returning

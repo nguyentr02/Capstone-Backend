@@ -12,6 +12,4 @@ router.post('/events', authenticate, authorize('ORGANIZER'), EventController.cre
 router.put('/events/:id', authenticate, authorize('ORGANIZER'), EventController.updateEvent);
 router.delete('/events/:id', authenticate, authorize('ORGANIZER'), EventController.deleteEvent);
 
-
-
 export default router;
