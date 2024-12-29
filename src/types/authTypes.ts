@@ -22,7 +22,8 @@ export interface TokenPair {
 export interface AuthResponse {
     user: Omit<User, 'password'>; // Omit password from User when returning
     // user: User;
-    token: string;
+    accessToken: string;
+    refreshToken: string;
 }
 
 // JWT Payload
