@@ -4,6 +4,15 @@ import { RegisterDto, LoginDto } from '../types/authTypes';
 import { AppError } from '../utils/errors';
 
 export class AuthController {
+
+    private static REFRESH_TOKEN_COOKIE_OPTIONS = {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict' as const,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
+
+    }
     
     static async registerUser(req: Request<{}, {}, RegisterDto>, res: Response) {
         try {
@@ -33,9 +42,19 @@ export class AuthController {
         try {
            const authData = await AuthService.loginUser(req.body);
 
+           // Set refresh token as HTTP-only cookie
+           res.cookie(
+            'refreshToken',
+            authData.refreshToken,
+            this.REFRESH_TOKEN_COOKIE_OPTIONS
+           )
+
             res.status(200).json({
                 success: true,
-                data: authData
+                data: {
+                    user: authData.user,
+                    accessToken: authData.accessToken
+                }
             });
         }
         catch (error) {
