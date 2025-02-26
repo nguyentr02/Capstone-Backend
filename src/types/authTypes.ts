@@ -13,10 +13,9 @@ export interface LoginDto {
     password: string;
 }
 
-// User object without password
+// User object without password for authentication response
 export interface AuthResponse {
     user: Omit<User, 'password'>; // Omit password from User when returning
-    // user: User;
     token: string;
 }
 

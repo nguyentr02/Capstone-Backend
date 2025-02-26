@@ -4,7 +4,7 @@ import { CreateEventDTO } from '../types/eventTypes';
 
 export class EventController {
 
-    // Create a new event
+    // 1 - Create a new event
     static async createEvent(req: Request<{}, {}, CreateEventDTO>, res: Response) :Promise<void> {
         try {
             //TODO: Implement authorization check
@@ -27,7 +27,7 @@ export class EventController {
 
     }
 
-    //Get all events
+    // 2 - Get all events
     static async getAllEvents(req: Request, res: Response) : Promise<void> {
         try {
             const events = await EventService.getAllEvents();
@@ -46,7 +46,7 @@ export class EventController {
         }
     }
 
-    //Get event by Id
+    // 3 - Get event by Id
     static async getEventById(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
@@ -66,7 +66,7 @@ export class EventController {
         }
     }
 
-    //Update event
+    //4 - Update event
     static async updateEvent(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
@@ -86,7 +86,7 @@ export class EventController {
         }
     }
 
-    //Delete event
+    //5 - Delete event
     static async deleteEvent(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
