@@ -25,6 +25,7 @@ export class EventService {
 
             // 2 - Create the questions and link them to the event
             const eventQuestions = await Promise.all(
+
                 // Map over the questions array
                 eventData.questions.map(async (q) => { 
                     // 2.1 - Create the question
@@ -47,6 +48,7 @@ export class EventService {
                 })
             );
 
+            // Return the created events with its questions
             return {
                 ...event,
                 questions: eventQuestions
