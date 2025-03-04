@@ -5,7 +5,7 @@ import { AppError, AuthenticationError } from '../utils/errors';
 
 export class AuthController {
     
-    private static REFRESH_TOKEN_COOKIE_OPTIONS = {
+    private static readonly REFRESH_TOKEN_COOKIE_OPTIONS = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
         sameSite: 'strict' as const,
@@ -19,7 +19,7 @@ export class AuthController {
             const authData = await AuthService.registerUser(req.body);
 
             // Set refresh token as an HTTP-only cookie
-            res.cookie('refreshToken', authData.refreshToken, this.REFRESH_TOKEN_COOKIE_OPTIONS);
+            res.cookie('refreshToken', authData.refreshToken, AuthController.REFRESH_TOKEN_COOKIE_OPTIONS);
 
             res.status(201).json({
                 success: true,
@@ -30,27 +30,24 @@ export class AuthController {
             });
         }
         catch (error) {
-            if (error instanceof AppError) {
-                res.status(error.statusCode).json({
-                    success: false,
-                    message: error.message
-                });
-            }
-            else {
-                res.status(500).json({
-                    success: false,
-                    message: 'Internal server error'
-                });
-            }
+            console.error('Registration error:', error);
+        
+            res.status(500).json({
+                success: false,
+                message: error instanceof Error ? error.message : 'Unknown error',
+                // During development, include the full error for debugging
+                error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+            });
         }
     }
 
+    //02 - Login
     static async loginUser(req: Request<{}, {}, LoginDto>, res: Response) {
         try {
            const authData = await AuthService.loginUser(req.body);
 
             // Set refresh token as an HTTP-only cookie
-            res.cookie('refreshToken', authData.refreshToken, this.REFRESH_TOKEN_COOKIE_OPTIONS);
+            res.cookie('refreshToken', authData.refreshToken, AuthController.REFRESH_TOKEN_COOKIE_OPTIONS);
 
             res.status(200).json({
                 success: true,
@@ -61,18 +58,14 @@ export class AuthController {
             });
         }
         catch (error) {
-            if (error instanceof AppError) {
-                res.status(error.statusCode).json({
-                    success: false,
-                    message: error.message
-                });
-            }
-            else {
-                res.status(500).json({
-                    success: false,
-                    message: 'Internal server error'
-                });
-            }
+            console.error('Registration error:', error);
+        
+        res.status(500).json({
+            success: false,
+            message: error instanceof Error ? error.message : 'Unknown error',
+            // During development, include the full error for debugging
+            error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+        });
         }
     }
 
@@ -87,7 +80,7 @@ export class AuthController {
             const tokens = await AuthService.refreshToken(refreshToken);
 
             // Set new refresh token as an HTTP-only cookie
-            res.cookie('refreshToken', tokens.refreshToken, this.REFRESH_TOKEN_COOKIE_OPTIONS);
+            res.cookie('refreshToken', tokens.refreshToken, AuthController.REFRESH_TOKEN_COOKIE_OPTIONS);
 
             res.status(200).json({
                 success: true,
@@ -97,8 +90,15 @@ export class AuthController {
             });
             
         }
-        catch {
-
+        catch(error){
+            console.error('Registration error:', error);
+        
+            res.status(500).json({
+                success: false,
+                message: error instanceof Error ? error.message : 'Unknown error',
+                // During development, include the full error for debugging
+                error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+            });
         }
     }
 
@@ -108,7 +108,6 @@ export class AuthController {
             // Clear the refresh token cookie
             res.clearCookie('refreshToken', {path: '/'});
 
-
             res.status(200).json({
                 success: true,
                 message: 'Logged out successfully'
@@ -116,18 +115,26 @@ export class AuthController {
 
         }
         catch (error) {
-            if (error instanceof AppError) {
-                res.status(error.statusCode).json({
-                    success: false,
-                    message: error.message
-                });
-            }
-            else {
-                res.status(500).json({
-                    success: false,
-                    message: 'Internal server error'
-                });
-            }
+            // if (error instanceof AppError) {
+            //     res.status(error.statusCode).json({
+            //         success: false,
+            //         message: error.message
+            //     });
+            // }
+            // else {
+            //     res.status(500).json({
+            //         success: false,
+            //         message: 'Internal server error'
+            //     });
+            // }
+            console.error('Registration error:', error);
+        
+            res.status(500).json({
+                success: false,
+                message: error instanceof Error ? error.message : 'Unknown error',
+                // During development, include the full error for debugging
+                error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+            });
         }
     }
 }
