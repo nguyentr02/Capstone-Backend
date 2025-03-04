@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 const app = express();
 
 app.use(express.json());  // Middleware to parse JSON body
-app.use(cookieParser()); // Middleware to parse cookies
+app.use(cookieParser());  // Middleware to parse cookies
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
