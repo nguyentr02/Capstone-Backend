@@ -115,18 +115,6 @@ export class AuthController {
 
         }
         catch (error) {
-            // if (error instanceof AppError) {
-            //     res.status(error.statusCode).json({
-            //         success: false,
-            //         message: error.message
-            //     });
-            // }
-            // else {
-            //     res.status(500).json({
-            //         success: false,
-            //         message: 'Internal server error'
-            //     });
-            // }
             console.error('Registration error:', error);
         
             res.status(500).json({
