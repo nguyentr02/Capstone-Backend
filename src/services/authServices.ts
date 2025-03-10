@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { RegisterDto, LoginDto, AuthResponse, JwtPayload } from "../types/authTypes";
+import { RegisterDto, LoginDto, AuthResponse, TokenResponse, RefreshTokenPayload } from "../types/authTypes";
 import { AuthenticationError, ValidationError} from "../utils/errors";
 
 import bcrypt from 'bcrypt';
@@ -7,8 +7,25 @@ import jwt from 'jsonwebtoken';
 
 export class AuthService {
     
-    // Register a new user
-    static async registerUser(data: RegisterDto): Promise<AuthResponse> {
+    //------ Utility functions
+    private static generateAccessToken(user: any): string{
+        return jwt.sign(
+            {user: user.user_id, role: user.role},
+            process.env.JWT_SECRET!,
+            {expiresIn: "15m"} 
+        )
+    }
+
+    private static generateRefreshToken(userId: number): string{
+        return jwt.sign(
+            {userId},
+            process.env.REFRESH_TOKEN_SECRET!,
+            {expiresIn: "7d"} 
+        )
+    }
+
+    // 01 - Register a new user
+    static async registerUser(data: RegisterDto): Promise<AuthResponse & {refreshToken: string}> {
         const { email, password, firstName, lastName, phoneNo } = data;
         
         // Check if user already exists
@@ -17,11 +34,7 @@ export class AuthService {
                 email
             }
         });
-
-        // If user exists, throw an error
-        if (existingUser) {
-            throw new ValidationError('Email already registered');
-        }
+        if (existingUser) {throw new ValidationError('Email already registered');}
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,60 +44,77 @@ export class AuthService {
             data: {
                 ...data,
                 password: hashedPassword,
-                role: 'PARTICIPANT' // Default role is participant
+                role: 'PARTICIPANT' // Default role
             }
         });
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { user_id: newUser.id, email, role: newUser.role },
-            process.env.JWT_SECRET!,
-            { expiresIn: '1h' }
-        );
+        // Generate JWT tokens
+        const accessToken = this.generateAccessToken(newUser);
+        const refreshToken = this.generateRefreshToken(newUser.id);
 
+        // Destructure password from user object    
         const { password: userPassword, ...userWithoutPassword } = newUser;
 
         // Return the user without password and the token
-        return { user: userWithoutPassword, token };
+        return { 
+            user: userWithoutPassword,
+            accessToken,
+            refreshToken
+         };
     }
-
-    // Login a user
-    static async loginUser(data: LoginDto): Promise<AuthResponse> {
+    // 02 - Login a user
+    static async loginUser(data: LoginDto): Promise<AuthResponse & {refreshToken: string}> {
         
         // Extract email and password from data
         const {email, password} = data;
 
         // Find the user
-        const user = await prisma.user.findUnique({
-            where: {
-                email: email
-            }
-        });
+        const user = await prisma.user.findUnique({ where: { email : email } });
+        if (!user) {throw new AuthenticationError('Invalid credentials');}
 
-        // If user does not exist, throw an error
-        if (!user) {
-            throw new AuthenticationError('Invalid credentials');
-        }
-
-        // Compare the password
+        // Verify password
         const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {throw new AuthenticationError('Invalid credentials');}
 
-        // If password does not match, throw an error
-        if (!passwordMatch) {
-            throw new AuthenticationError('Invalid credentials');
-        }
+        // Generate JWT tokens
+        const accessToken = this.generateAccessToken(user);
+        const refreshToken = this.generateRefreshToken(user.id);
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { user_id: user.id, email, role: user.role },
-            process.env.JWT_SECRET!,
-            { expiresIn: '1h' }
-        );
-        
+        // Destructure password from user object
         const { password: userPassword, ...userWithoutPassword } = user;
 
         // Return the user without password and the token
-        return { user: userWithoutPassword, token };
+        return { 
+            user: userWithoutPassword, 
+            accessToken, 
+            refreshToken
+        };
     }
+
+    // 03 - Refresh token
+    static async refreshToken(token: string): Promise<TokenResponse & {refreshToken: string}> {
+        try {
+            // Verify the token
+            const payload = jwt.verify(
+                token, 
+                process.env.REFRESH_TOKEN_SECRET!
+            ) as RefreshTokenPayload;
+            
+            // Find the user
+            const user = await prisma.user.findUnique({ where: { id: payload.user_id } });
+            if (!user) {throw new AuthenticationError('Invalid refresh token');}
+
+            // Generate new tokens
+            const accessToken = this.generateAccessToken(user);
+            const newRefreshToken = this.generateRefreshToken(user.id);
+
+            return { accessToken, refreshToken: newRefreshToken };
+
+        }
+        catch (error){
+            throw new AuthenticationError('Invalid refresh token');
+        }
+    }
+
 
 }

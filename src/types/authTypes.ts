@@ -13,17 +13,41 @@ export interface LoginDto {
     password: string;
 }
 
-// User object without password for authentication response
-export interface AuthResponse {
-    user: Omit<User, 'password'>; // Omit password from User when returning
-    token: string;
+export interface UserDto {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phoneNo: string|null;
+    role: UserRole;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-// JWT Payload
+// User object without password for authentication response
+export interface AuthResponse {
+    user: UserDto; 
+    accessToken: string;
+}
+
+// Access token response
+export interface TokenResponse {
+    accessToken: string;
+}
+
+// Decoded refresh token structure
+export interface RefreshTokenPayload {
+    user_id: number;
+    iat?: number;
+    exp?: number;
+}
+
+// JWT Payload structure for access token
 export interface JwtPayload {
     user_id: number;
-    email: string;
     role: UserRole;
+    iat?: number;
+    exp?: number;
 }
 
 // Extend Express Request type to include user information
