@@ -4,7 +4,7 @@ import { RegisterDto, LoginDto } from '../types/authTypes';
 import { AppError, AuthenticationError } from '../utils/errors';
 
 export class AuthController {
-    
+   
     private static readonly REFRESH_TOKEN_COOKIE_OPTIONS = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
@@ -115,18 +115,6 @@ export class AuthController {
 
         }
         catch (error) {
-            // if (error instanceof AppError) {
-            //     res.status(error.statusCode).json({
-            //         success: false,
-            //         message: error.message
-            //     });
-            // }
-            // else {
-            //     res.status(500).json({
-            //         success: false,
-            //         message: 'Internal server error'
-            //     });
-            // }
             console.error('Registration error:', error);
         
             res.status(500).json({
