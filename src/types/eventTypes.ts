@@ -31,3 +31,14 @@ export type EventResponse = {
         lastName: string;
     };
 }
+
+// Event filters
+export interface EventFilters {
+    search?: string;
+    eventType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    location?: string;
+    organizerId?: number;
+    status?: string;
+}

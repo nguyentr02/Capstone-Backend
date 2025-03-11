@@ -1,12 +1,22 @@
 import {prisma} from '../config/prisma';
-import { Event, User} from '@prisma/client';
-import { EventError } from '../utils/errors';
 import { CreateEventDTO, EventResponse } from '../types/eventTypes';
 
 export class EventService {
 
-    // Create a new event
+    // 01 - Create a new event
     static async createEvent(organizerId: number, eventData: CreateEventDTO) {
+        
+        // Make sure the event end date is after the start date
+        if (new Date(eventData.endDateTime) < new Date(eventData.startDateTime)) {
+            throw new Error('Event end date must be after the start date');
+        }
+
+        // Make sure the event is not in the past
+        if (new Date(eventData.startDateTime) < new Date()) {
+            throw new Error('Event start date must be in the future');
+        }
+
+        
         return prisma.$transaction( async (tx) => {
             // 1 - Create the event
             const event = await tx.event.create({
@@ -56,7 +66,7 @@ export class EventService {
         });
     };
     
-    // Get all events
+    // 02 - Get all events with optional filtering
     static async getAllEvents() {
         return prisma.event.findMany({
             include: {
@@ -75,7 +85,7 @@ export class EventService {
         });
     }
 
-    //Get single event
+    // 03 - Get a single event
     static async getEventById(eventId: number) {
         return prisma.event.findUnique({
             where: { id: eventId },
@@ -95,7 +105,7 @@ export class EventService {
         });
     }
     
-    // Update event
+    // 04 - Update event
     static async updateEvent (eventId: number, eventData: Partial<CreateEventDTO>) {
         return prisma.event.update({
             where: { id: eventId },
@@ -112,7 +122,7 @@ export class EventService {
     }
 
 
-    // Delete event
+    // 05 -  Delete event
     static async deleteEvent(eventId: number) {
         return prisma.event.delete({
             where: { id: eventId }
