@@ -1,12 +1,14 @@
 import {Request, Response} from 'express';
 import { EventService } from '../services/eventServices';
-import { CreateEventDTO } from '../types/eventTypes';
+import { CreateEventDTO, EventFilters } from '../types/eventTypes';
+import { ValidationError } from '../utils/errors';
 
 export class EventController {
 
     // 1 - Create a new event
     static async createEvent(req: Request<{}, {}, CreateEventDTO>, res: Response) :Promise<void> {
         try {
+
             //TODO: Implement authorization check
             const organiserId = 1; // Hardcoded for now
             
@@ -19,9 +21,11 @@ export class EventController {
             });
         }
         catch (error) {
+            console.log("Error creating event: ", error);
+            
             res.status(500).json({
                 success: false,
-                message: 'Internal server error'
+                message: 'Internal server error',
             });
         }
 
@@ -30,20 +34,62 @@ export class EventController {
     // 2 - Get all events
     static async getAllEvents(req: Request, res: Response) : Promise<void> {
         try {
-            const events = await EventService.getAllEvents();
 
-            res.status(200).json({
-                success: true,
-                data: events
-            });
+            // 1. Extract query parameters
+            const page = req.query.page ? parseInt(req.query.page as string) : 1;
+            const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+            
+
+            //2. Build filters from query parameters
+            const filters: EventFilters = {
+                search: req.query.search as string,
+                eventType: req.query.eventType as string,
+                location: req.query.location as string
+            };
+
+            //3. Handle date filters
+
+            if (req.query.startDate) {
+                filters.startDate = new Date(req.query.startDate as string);
+              }
+              
+            if (req.query.endDate) {
+            filters.endDate = new Date(req.query.endDate as string);
+            }
+              
+            //4. For organizers, allow viewing their own events including drafts
+            if (req.user?.role === 'ORGANIZER') {
+                if (req.query.myEvents === 'true') {
+                    filters.organizerId = req.user.user_id;
+                    // If viewing own events, include all statuses
+                    filters.status = req.query.status as string;
+                }
+            } else {
+            // Non-organizers can only see published events
+                filters.status = 'PUBLISHED';
+            }
+            
+            // Get events from service
+            const result = await EventService.getAllEvents({ page, limit, filters });
+            
+            res.json({ success: true, data: result });
         }
-        catch(err) {
-            res.status(500).json({
+        catch(error) {
+            if (error instanceof ValidationError) {
+                res.status(404).json({
+                  success: false,
+                  message: error.message
+                });
+
+                return;
+              }
+              
+              console.error('Error getting event:', error);
+              res.status(500).json({
                 success: false,
-                message: 'Internal server error',
-                error: err
-            })
-        }
+                message: error instanceof Error ? error.message : 'Unknown error'
+              });
+            }
     }
 
     // 3 - Get event by Id
@@ -98,10 +144,11 @@ export class EventController {
             });
         }
         catch(err) {
+            console.log(err);
+
             res.status(500).json({
                 success: false,
-                message: 'Error deleting event',
-                error: err
+                message: 'Error deleting event'
             })
         }
     }
