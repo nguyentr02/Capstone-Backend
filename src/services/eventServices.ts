@@ -16,6 +16,22 @@ export class EventService {
             throw new Error('Event start date must be in the future');
         }
 
+        // Validate tickets
+        if (!eventData.tickets || eventData.tickets.length === 0) {
+            throw new Error('At least one ticket type is required');
+        }
+
+        // Check ticket dates
+        for (const ticket of eventData.tickets) {
+            if (new Date(ticket.salesEnd) <= new Date(ticket.salesStart)) {
+                throw new Error('Ticket sales end date must be after sales start date');
+            }
+            
+            if (new Date(ticket.salesEnd) > new Date(eventData.endDateTime)) {
+                throw new Error('Ticket sales cannot end after the event ends');
+            }
+        }
+
         
         return prisma.$transaction( async (tx) => {
             // 1 - Create the event
@@ -33,7 +49,25 @@ export class EventService {
                 }
             });
 
-            // 2 - Create the questions and link them to the event
+            // 2 - Create the tickets and link them to the event
+            const eventTickets = await Promise.all(
+                eventData.tickets.map(async (ticket) => {
+                    return tx.ticket.create({
+                        data: {
+                            eventId: event.id,
+                            name: ticket.name,
+                            description: ticket.description,
+                            price: ticket.price,
+                            quantityTotal: ticket.quantityTotal,
+                            quantitySold: 0,
+                            salesStart: new Date(ticket.salesStart),
+                            salesEnd: new Date(ticket.salesEnd)
+                        }
+                    });
+                })
+            );
+
+            // 3 - Create the questions and link them to the event
             const eventQuestions = await Promise.all(
 
                 // Map over the questions array
@@ -42,7 +76,7 @@ export class EventService {
                     const question = await tx.question.create({
                         data : {
                             questionText: q.questionText,
-                            questionType: 'TEXT',
+                            questionType: 'TEXT', // Default to text for now
                         }
                     });  
                     
@@ -58,9 +92,10 @@ export class EventService {
                 })
             );
 
-            // Return the created events with its questions
+            // 4 - Return the created events with its questions
             return {
                 ...event,
+                tickets: eventTickets,
                 questions: eventQuestions
             };
         });

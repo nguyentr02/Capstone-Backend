@@ -7,6 +7,7 @@ export class EventController {
     // 1 - Create a new event
     static async createEvent(req: Request<{}, {}, CreateEventDTO>, res: Response) :Promise<void> {
         try {
+
             //TODO: Implement authorization check
             const organiserId = 1; // Hardcoded for now
             
@@ -19,9 +20,11 @@ export class EventController {
             });
         }
         catch (error) {
+            console.log("Error creating event: ", error);
             res.status(500).json({
                 success: false,
-                message: 'Internal server error'
+                message: 'Internal server error',
+                error: error
             });
         }
 

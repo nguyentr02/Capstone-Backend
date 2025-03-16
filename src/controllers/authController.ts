@@ -58,7 +58,7 @@ export class AuthController {
             });
         }
         catch (error) {
-            console.error('Registration error:', error);
+            console.error('Login error:', error);
         
         res.status(500).json({
             success: false,
@@ -91,7 +91,7 @@ export class AuthController {
             
         }
         catch(error){
-            console.error('Registration error:', error);
+            console.error('Error refreshing token:', error);
         
             res.status(500).json({
                 success: false,
@@ -115,7 +115,7 @@ export class AuthController {
 
         }
         catch (error) {
-            console.error('Registration error:', error);
+            console.error('Logout error:', error);
         
             res.status(500).json({
                 success: false,

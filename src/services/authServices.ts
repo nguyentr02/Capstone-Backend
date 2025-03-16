@@ -34,6 +34,7 @@ export class AuthService {
                 email
             }
         });
+        
         if (existingUser) {throw new ValidationError('Email already registered');}
 
         // Hash the password
@@ -62,6 +63,7 @@ export class AuthService {
             refreshToken
          };
     }
+    
     // 02 - Login a user
     static async loginUser(data: LoginDto): Promise<AuthResponse & {refreshToken: string}> {
         

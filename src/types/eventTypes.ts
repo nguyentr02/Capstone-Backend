@@ -9,6 +9,14 @@ export interface CreateEventDTO {
 
     startDateTime: Date | string,
     endDateTime: Date | string,
+    tickets: Array<{
+        name: string;
+        description?: string;
+        price: number;
+        quantityTotal: number;
+        salesStart: Date;
+        salesEnd: Date;
+    }>,
     questions: Array<{
         questionText: string;
         isRequired: boolean;
