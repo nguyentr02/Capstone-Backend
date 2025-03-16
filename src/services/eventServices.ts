@@ -153,7 +153,7 @@ export class EventService {
         //3. Get the events with the filters and pagination
         const [events, total] = await Promise.all([ 
             prisma.event.findMany({
-                where,
+                // where,
                 skip,
                 take: limit,
                 orderBy: {
@@ -166,6 +166,9 @@ export class EventService {
                             firstName: true,
                             lastName: true
                         }
+                    },
+                    tickets: {
+                        where: { status: 'ACTIVE' }
                     },
                     _count: {
                         select: {
