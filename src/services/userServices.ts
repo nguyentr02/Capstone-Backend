@@ -1,3 +1,4 @@
+import { UserRole } from '@prisma/client';
 import { prisma } from '../config/prisma'
 import { UserUpdateDto } from "../types/userTypes";
 import { ValidationError } from "../utils/errors";
@@ -63,36 +64,53 @@ export class UserService {
     // 04 - Get all users
     static async getAllUsers()
     {
-        try
-        {
-            const users = await prisma.user.findMany();
-            return users;
-        }
-        catch(error)
-        {
-            console.error("Error fetching users", error)
-        }
-        
+        const users = await prisma.user.findMany();
+        if(!users){throw new ValidationError("Users not found")}
+
+        return users;
     }
 
+    //05 - Get user by Id
     static async getUserById(userId:number){
-       try
-       {    
-            
-            const user = await prisma.user.findUnique({
-                where:{
-                    id: userId,
-                },
-            });
-            !user ? console.log('User not found') : '';  
-            
-            return user; 
-       } 
-       catch(error)
-       {
-            console.error('Error fetching user:', error)
-       }
+        // Check if user exists
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) { throw new ValidationError('User not found'); }
+        
+        return user;
     }
-    static async updateUserRole(userId:number){}
-    static async deleteUser(userId:number){}
+
+    //06 - UpdateUserRole
+    static async updateUserRole(userId:number, currentRole: UserRole, newRole:UserRole){
+        // Check if user exists
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) { throw new ValidationError('User not found'); }
+        //check if new role is current role 
+        if (newRole == currentRole){throw new ValidationError('new role must be different to current role')}
+
+        // Update user data
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { role: newRole }
+        });
+
+        // Remove password from user object
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+    }
+
+    //07 - Delete user
+    static async deleteUser(userId:number){
+
+        const deletedUser = await prisma.user.delete({
+            where:{id: userId}
+        });
+
+        if(!deletedUser){throw new ValidationError('User not found')};  
+        
+        return deletedUser; 
+    }
+
+
+
+
 }

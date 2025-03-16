@@ -1,3 +1,5 @@
+import { UserRole } from "@prisma/client";
+
 export interface UserUpdateDto {
     firstName?: string;
     lastName?: string;

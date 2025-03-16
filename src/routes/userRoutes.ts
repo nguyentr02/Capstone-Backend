@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { UserController } from "../controllers/userController";
-import { authenticate } from "../middlewares/authMiddlewares";
+import { authenticate, authorize } from "../middlewares/authMiddlewares";
 import { validateRequest } from "../middlewares/authMiddlewares";
 import { userUpdateSchema, updatePasswordSchema } from "../validation/userValidation";
 
@@ -14,9 +14,9 @@ router.post('/change-password', authenticate, validateRequest(updatePasswordSche
 
 //router.post('/', UserController.createUser);
 // ----- Admin functionality -----
-router.get('/', UserController.getAllUsers);
-router.get('/:id', UserController.getUserById);
-// router.put('/:id', UserController.updateUser);
-// router.delete('/:id', UserController.deleteUser);
+router.get('/', authenticate, authorize('ADMIN'), UserController.getAllUsers);
+router.get('/:id', authenticate, authorize('ADMIN'), UserController.getUserById);
+router.put('/:id', authenticate, authorize('ADMIN'), UserController.updateUserRole);
+router.delete('/:id', authenticate, authorize('ADMIN'), UserController.deleteUser);
 
 export default router;

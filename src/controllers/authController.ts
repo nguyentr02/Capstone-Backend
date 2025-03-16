@@ -72,7 +72,7 @@ export class AuthController {
     // 03 - Refresh token
     static async refreshToken(req: Request, res: Response) {
         try {
-            const {refreshToken} = req.cookies.refreshToken;
+            const refreshToken = req.cookies.refreshToken;
             if (!refreshToken) {
                 throw new AuthenticationError('No refresh token provided');
             }

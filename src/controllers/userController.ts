@@ -96,7 +96,7 @@ export class UserController {
         }
     }
 
-    //05 - Get all users
+    //04 - Get all users
     static async getAllUsers(req: Request, res: Response): Promise<void>{
         try
         {
@@ -109,7 +109,9 @@ export class UserController {
         }
         catch(error)
         {
-                res.status(500).json({
+            console.error('Get all users error:', error);
+
+            res.status(500).json({
                 success: false,
                 message: error instanceof Error ? error.message : 'Unknown error',
                 error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
@@ -117,27 +119,91 @@ export class UserController {
         }
     }
 
-    //06 - Get user by id
-    static async getUserById(req: Request, res: Response):Promise<void>{
+   //05 - Delete user
+    static async deleteUser(req: Request, res: Response):Promise<void>{
         try {
 
             const userId = Number(req.params.id);
+            const deletedUser = await UserService.deleteUser(userId);
+
+            res.status(200).json({
+                success: true,
+                data: deletedUser
+            });
+
+        }
+        catch(error) {
+            console.error('Delete user error:', error);
+
+            res.status(500).json({
+                success: false,
+                message: error instanceof Error ? error.message : 'Unknown error',
+                error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+            });
+
+        }
+    }
+
+    //06 - Update User Role
+    static async updateUserRole(req: Request, res: Response):Promise<void>{
+    try {
+
+        const userId = Number(req.params.id);
+        if (!userId) {
+            res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            });
+            return;
+        }
+
+        const {currentRole, newRole} = req.body;
+        const result = await UserService.updateUserRole(userId, currentRole, newRole);
+
+        res.status(200).json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        console.error('Update role error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: error instanceof Error ? error.message : 'Unknown error',
+            error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+        });
+    }
+    }
+
+    // 
+    static async getUserById(req: Request, res: Response) : Promise<void> {
+        try {
+            const userId = Number(req.params.id);
+            if (!userId) {
+                res.status(401).json({
+                    success: false,
+                    message: 'Unauthorized'
+                });
+                return;
+            }
+
             const user = await UserService.getUserById(userId);
 
             res.status(200).json({
                 success: true,
                 data: user
             });
-
         }
-        catch(err) {
+        catch (error) {
+            console.error('Get user error:', error);
 
-            res.status(404).json({
+            res.status(500).json({
                 success: false,
-                message: 'Event not found',
-                error: err
-            })
-            
+                message: error instanceof Error ? error.message : 'Unknown error',
+                error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+            });
         }
     }
+    
 }

@@ -16,9 +16,9 @@ export class AuthService {
         )
     }
 
-    private static generateRefreshToken(userId: number): string{
+    private static generateRefreshToken(user_id: number): string{
         return jwt.sign(
-            {userId},
+            {user_id},
             process.env.REFRESH_TOKEN_SECRET!,
             {expiresIn: "7d"} 
         )
