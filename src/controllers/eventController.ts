@@ -1,6 +1,7 @@
 import {Request, Response} from 'express';
 import { EventService } from '../services/eventServices';
 import { CreateEventDTO, EventFilters } from '../types/eventTypes';
+import { ValidationError } from '../utils/errors';
 
 export class EventController {
 
@@ -52,44 +53,43 @@ export class EventController {
                 filters.startDate = new Date(req.query.startDate as string);
               }
               
-              if (req.query.endDate) {
-                filters.endDate = new Date(req.query.endDate as string);
-              }
+            if (req.query.endDate) {
+            filters.endDate = new Date(req.query.endDate as string);
+            }
               
-              // For organizers, allow viewing their own events including drafts
-              if (req.user?.role === 'ORGANIZER') {
+            //4. For organizers, allow viewing their own events including drafts
+            if (req.user?.role === 'ORGANIZER') {
                 if (req.query.myEvents === 'true') {
-                  filters.organizerId = req.user.userId;
-                  // If viewing own events, include all statuses
-                  filters.status = req.query.status as string;
+                    filters.organizerId = req.user.user_id;
+                    // If viewing own events, include all statuses
+                    filters.status = req.query.status as string;
                 }
-              } else {
-                // Non-organizers can only see published events
-                filters.status = 'PUBLISHED';
+            } else {
+            // Non-organizers can only see published events
+            filters.status = 'PUBLISHED';
+            }
+            
+            // Get events from service
+            const result = await EventService.getAllEvents({ page, limit, filters });
+            
+            res.json({ success: true, data: result });
+        }
+        catch(error) {
+            if (error instanceof ValidationError) {
+                res.status(404).json({
+                  success: false,
+                  message: error.message
+                });
+
+                return;
               }
               
-              // Get events from service
-              const result = await EventService.getEvents({
-                page,
-                limit,
-                filters
-              });
-              
-              res.json({
-                success: true,
-                data: result
-              });
-            
-        }
-        catch(err) {
-            console.log("Error getting events: ", err);
-
-            res.status(500).json({
+              console.error('Error getting event:', error);
+              res.status(500).json({
                 success: false,
-                message: 'Internal server error',
-                error: err
-            })
-        }
+                message: error instanceof Error ? error.message : 'Unknown error'
+              });
+            }
     }
 
     // 3 - Get event by Id
@@ -144,6 +144,8 @@ export class EventController {
             });
         }
         catch(err) {
+            console.log(err);
+
             res.status(500).json({
                 success: false,
                 message: 'Error deleting event',
