@@ -22,10 +22,10 @@ export class EventController {
         }
         catch (error) {
             console.log("Error creating event: ", error);
+            
             res.status(500).json({
                 success: false,
                 message: 'Internal server error',
-                error: error
             });
         }
 
@@ -66,7 +66,7 @@ export class EventController {
                 }
             } else {
             // Non-organizers can only see published events
-            filters.status = 'PUBLISHED';
+                filters.status = 'PUBLISHED';
             }
             
             // Get events from service
@@ -148,8 +148,7 @@ export class EventController {
 
             res.status(500).json({
                 success: false,
-                message: 'Error deleting event',
-                error: err
+                message: 'Error deleting event'
             })
         }
     }

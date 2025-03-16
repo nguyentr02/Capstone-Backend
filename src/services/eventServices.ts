@@ -1,5 +1,5 @@
 import {prisma} from '../config/prisma';
-import { CreateEventDTO, EventResponse } from '../types/eventTypes';
+import { CreateEventDTO, EventFilters, EventResponse } from '../types/eventTypes';
 
 export class EventService {
 
@@ -72,7 +72,7 @@ export class EventService {
 
                 // Map over the questions array
                 eventData.questions.map(async (q) => { 
-                    // 2.1 - Create the question
+                    // 3.1 - Create the question
                     const question = await tx.question.create({
                         data : {
                             questionText: q.questionText,
@@ -80,7 +80,7 @@ export class EventService {
                         }
                     });  
                     
-                    // 2.2 - Link the question to the event
+                    // 3.2 - Link the question to the event
                     return tx.eventQuestions.create({
                         data : {
                             eventId: event.id,
@@ -102,7 +102,7 @@ export class EventService {
     };
     
     // 02 - Get all events with optional filtering
-    static async getAllEvents({ page = 1, limit = 10, filters = {} }) {
+    static async getAllEvents({ page = 1, limit = 10, filters = {} as EventFilters }) {
         
         // 1. Calculate the number of items to skip
         const skip = (page - 1) * limit;   
@@ -190,9 +190,10 @@ export class EventService {
         }
     }
 
-    // 03 - Get a single event
+    // 03 - Get a single event by ID
     static async getEventById(eventId: number) {
-        return prisma.event.findUnique({
+
+        const event = await prisma.event.findUnique({
             where: { id: eventId },
             include: {
                 organizer: {
@@ -201,13 +202,30 @@ export class EventService {
                         lastName: true
                     }
                 },
+                tickets: {
+                    where: { status: 'ACTIVE' }
+                },
                 eventQuestions: {
                     include: {
                         question: true
+                    },
+                    orderBy: {
+                        displayOrder: 'asc'
+                    }
+                },
+                _count : {
+                    select: {
+                        registrations: true
                     }
                 }
             }
         });
+
+        if (!event) {
+            throw new Error('Event not found');
+        }
+
+        return event;
     }
     
     // 04 - Update event
