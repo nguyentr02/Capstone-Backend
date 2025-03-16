@@ -60,8 +60,39 @@ export class UserService {
     }
 
     // ------- Admin funcitonalities --------
-    static async getAllUsers(){}
-    static async getUserById(userId:number){}
+    // 04 - Get all users
+    static async getAllUsers()
+    {
+        try
+        {
+            const users = await prisma.user.findMany();
+            return users;
+        }
+        catch(error)
+        {
+            console.error("Error fetching users", error)
+        }
+        
+    }
+
+    static async getUserById(userId:number){
+       try
+       {    
+            
+            const user = await prisma.user.findUnique({
+                where:{
+                    id: userId,
+                },
+            });
+            !user ? console.log('User not found') : '';  
+            
+            return user; 
+       } 
+       catch(error)
+       {
+            console.error('Error fetching user:', error)
+       }
+    }
     static async updateUserRole(userId:number){}
     static async deleteUser(userId:number){}
 }

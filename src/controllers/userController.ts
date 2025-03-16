@@ -95,4 +95,49 @@ export class UserController {
             });
         }
     }
+
+    //05 - Get all users
+    static async getAllUsers(req: Request, res: Response): Promise<void>{
+        try
+        {
+            const user = await UserService.getAllUsers();
+
+            res.status(200).json({
+                success: true,
+                data: user
+            });
+        }
+        catch(error)
+        {
+                res.status(500).json({
+                success: false,
+                message: error instanceof Error ? error.message : 'Unknown error',
+                error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+            });
+        }
+    }
+
+    //06 - Get user by id
+    static async getUserById(req: Request, res: Response):Promise<void>{
+        try {
+
+            const userId = Number(req.params.id);
+            const user = await UserService.getUserById(userId);
+
+            res.status(200).json({
+                success: true,
+                data: user
+            });
+
+        }
+        catch(err) {
+
+            res.status(404).json({
+                success: false,
+                message: 'Event not found',
+                error: err
+            })
+            
+        }
+    }
 }
