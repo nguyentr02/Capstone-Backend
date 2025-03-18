@@ -9,6 +9,14 @@ export interface CreateEventDTO {
 
     startDateTime: Date | string,
     endDateTime: Date | string,
+    tickets: Array<{
+        name: string;
+        description?: string;
+        price: number;
+        quantityTotal: number;
+        salesStart: Date;
+        salesEnd: Date;
+    }>,
     questions: Array<{
         questionText: string;
         isRequired: boolean;
@@ -30,4 +38,15 @@ export type EventResponse = {
         firstName: string;
         lastName: string;
     };
+}
+
+// Event filters
+export interface EventFilters {
+    search?: string;
+    eventType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    location?: string;
+    organizerId?: number;
+    status?: string;
 }

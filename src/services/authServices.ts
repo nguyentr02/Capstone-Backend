@@ -12,7 +12,7 @@ export class AuthService {
         return jwt.sign(
             {user: user.user_id, role: user.role},
             process.env.JWT_SECRET!,
-            {expiresIn: "15m"} 
+            {expiresIn: "1h"} 
         )
     }
 
@@ -34,6 +34,7 @@ export class AuthService {
                 email
             }
         });
+        
         if (existingUser) {throw new ValidationError('Email already registered');}
 
         // Hash the password
@@ -62,6 +63,7 @@ export class AuthService {
             refreshToken
          };
     }
+
     // 02 - Login a user
     static async loginUser(data: LoginDto): Promise<AuthResponse & {refreshToken: string}> {
         
