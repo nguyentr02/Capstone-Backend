@@ -76,6 +76,7 @@ model User {
   // Relations
   organizedEvents Event[]        @relation("EventOrganizer")
   registrations   Registration[]
+  participants Participant[] 
 
   @@map("users")
 }
@@ -153,18 +154,46 @@ model Response {
   @@map("responses")
 }
 
+model Participant {
+  id            Int          @id @default(autoincrement()) @map("id")
+  email         String       
+  firstName     String       @map("first_name")
+  lastName      String       @map("last_name")
+  phoneNumber    String?   @map("phone_number")
+  dateOfBirth    DateTime? @map("date_of_birth")
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?   @map("zip_code")
+  country        String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  registrations  Registration[]
+  userId         Int?      @map("user_id") // Optional link to user account
+  user           User?     @relation(fields: [userId], references: [id])
+
+  @@unique([email])
+  @@index([city, state, country])
+  @@map("participants")
+}
+
 model Registration {
-  id      Int                @id @default(autoincrement()) @map("registration_id")
-  userId  Int?               @map("user_id")
-  eventId Int                @map("event_id")
-  status  RegistrationStatus @default(PENDING)
+  id                Int                @id @default(autoincrement()) @map("registration_id")
+  eventId           Int                @map("event_id")
+  participantId     Int                @map("participant_id")
+  userId            Int?               @map("user_id")
+  status            RegistrationStatus @default(PENDING)
 
   created_at DateTime @default(now()) @map("created_at")
   updated_at DateTime @updatedAt @map("updated_at")
 
   // Relations
-  user      User?      @relation(fields: [userId], references: [id])
+  
   event     Event      @relation(fields: [eventId], references: [id])
+  participant Participant @relation(fields: [participantId], references: [id])
+  user      User?      @relation(fields: [userId], references: [id])
   purchase  Purchase?
   responses Response[]
 
