@@ -432,6 +432,77 @@ export class EventService {
         });
     }
 
+    /**
+     * 05 - Update event status
+     * @param eventId
+     * @param status
+     */
+    static async updateEventStatus(eventId: number, status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED') {
+        
+        // Verify event exists
+        const existingEvent = await this.getEventById(eventId);
+        
+        // Validate status transition
+        if (existingEvent.status === 'COMPLETED') {
+            throw new Error('Cannot change status of a completed event');
+        }
+        
+        if (existingEvent.status === 'CANCELLED' && status !== 'DRAFT') {
+            throw new Error('Cancelled events can only be restored to draft status');
+        }
+        
+        // For publishing, verify the event has questions
+        if (status === 'PUBLISHED') {
+            const questionCount = await prisma.eventQuestions.count({
+                where: { eventId }
+            });
+            
+            if (questionCount === 0) {
+                throw new Error('Events must have at least one question before publishing');
+            }
+            
+            // For paid events, verify tickets exist
+            if (!existingEvent.isFree) {
+                const ticketCount = await prisma.ticket.count({
+                    where: { eventId }
+                });
+                
+                if (ticketCount === 0) {
+                    throw new Error('Paid events must have at least one ticket type before publishing');
+                }
+            }
+        }
+        
+        // For cancellation, handle existing registrations
+        if (status === 'CANCELLED' && existingEvent.status === 'PUBLISHED') {
+            const registrationCount = await prisma.registration.count({
+                where: { eventId }
+            });
+            
+            if (registrationCount > 0) {
+                // TODO: Implement: send cancellation notifications here and process refunds for paid events
+                
+                // Update all registrations to cancelled
+                await prisma.registration.updateMany({
+                    where: { 
+                        eventId,
+                        status: {
+                            in: ['CONFIRMED', 'PENDING']
+                        } 
+                    },
+                    data: { status: 'CANCELLED' }
+                });
+            }
+        }
+        
+        // Update the event status
+        const updatedEvent = await prisma.event.update({
+            where: { id: eventId },
+            data: { status }
+        });
+        
+        return updatedEvent;
+    }
 
     // 05 -  Delete event
     static async deleteEvent(eventId: number) {
