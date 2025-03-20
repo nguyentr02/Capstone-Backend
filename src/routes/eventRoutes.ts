@@ -13,5 +13,10 @@ router.get('/:id', EventController.getEventById);
 router.post('/', authenticate, EventController.createEvent);
 router.put('/:id', authenticate, authorize('ORGANIZER'), EventController.updateEvent);
 router.delete('/:id', authenticate, authorize('ORGANIZER'), EventController.deleteEvent);
-
+router.patch('/:id/status', 
+    authenticate, 
+    authorize('ORGANIZER', 'ADMIN'),
+    validateRequest(updateEventStatusSchema),
+    EventController.updateEventStatus
+);
 export default router;

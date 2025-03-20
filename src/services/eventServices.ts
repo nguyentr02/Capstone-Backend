@@ -78,7 +78,6 @@ export class EventService {
                 );
             }
             
-
             // 3 - Create the questions and link them to the event
             const eventQuestions = await Promise.all(
 
@@ -113,7 +112,11 @@ export class EventService {
         });
     };
     
-    // 02 - Get all events with optional filtering
+    /**
+     * 02 - Get all events with pagination and filters
+     * @param param0 
+     * @returns 
+     */
     static async getAllEvents({ page = 1, limit = 10, filters = {} as EventFilters }) {
         
         // 1. Calculate the number of items to skip
@@ -166,7 +169,7 @@ export class EventService {
         //3. Get the events with the filters and pagination
         const [events, total] = await Promise.all([ 
             prisma.event.findMany({
-                where: {},
+                where,
                 skip,
                 take: limit,
                 orderBy: {
@@ -189,7 +192,6 @@ export class EventService {
                         }
                     }
                 }
-
             }),
             prisma.event.count({ where: {}}) // Count the total number of events
         ]);
@@ -206,14 +208,36 @@ export class EventService {
         }
     }
 
-    // 03 - Get a single event by ID
+    /**
+     * 03 - Get event by ID
+     * @param eventId 
+     * @returns 
+     */
     static async getEventById(eventId: number) {
+        const event = await prisma.event.findUnique({
+            where: { id: eventId }
+        });
 
+        if (!event) {
+            throw new Error('Event not found');
+        }
+
+        return event;
+        
+    }
+    
+    /**
+     * 04 - Get event with details
+     * @param eventId 
+     * @returns 
+     */
+    static async getEventWithDetails(eventId: number) {
         const event = await prisma.event.findUnique({
             where: { id: eventId },
             include: {
                 organizer: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true
                     }
@@ -243,28 +267,174 @@ export class EventService {
 
         return event;
     }
-    
-    // 04 - Update event
+
+    /**
+     * 05 - Update event
+     * @param eventId 
+     * @param eventData 
+     * @returns 
+     */
     static async updateEvent (eventId: number, eventData: Partial<CreateEventDTO>) {
-        return prisma.event.update({
-            where: { id: eventId },
-            data: {
-                name: eventData.name,
-                description: eventData.description,
-                location: eventData.location,
-                capacity: eventData.capacity,
-                eventType: eventData.eventType,
-                startDateTime: eventData.startDateTime,
-                endDateTime: eventData.endDateTime,
+        // Verify that event exists
+        const existingEvent = await prisma.event.findUnique({
+            where: { id: eventId }
+        });
+
+        if (!existingEvent) {
+            throw new Error('Event not found');
+        }
+
+        // Make sure the event is not completed
+        if (existingEvent.status === 'COMPLETED') {
+            throw new Error('Cannot update a completed event');
+        }
+
+        // Handle date validation if provided
+        if (eventData.startDateTime && eventData.endDateTime) {
+            if (new Date(eventData.endDateTime) < new Date(eventData.startDateTime)) {
+                throw new Error('Event end date must be after the start date');
             }
+        } else if (eventData.startDateTime && existingEvent.endDateTime) {
+            if (new Date(existingEvent.endDateTime) < new Date(eventData.startDateTime)) {
+                throw new Error('Event end date must be after the start date');
+            }
+        } else if (eventData.endDateTime && existingEvent.startDateTime) {
+            if (new Date(eventData.endDateTime) < new Date(existingEvent.startDateTime)) {
+                throw new Error('Event end date must be after the start date');
+            }
+        }
+
+        // Check if changing from free to paid
+        if (eventData.isFree !== undefined && eventData.isFree !== existingEvent.isFree) {
+            
+            // If changing from free to paid, tickets must be provided
+            if (eventData.isFree === false && (!eventData.tickets || eventData.tickets.length === 0)) {
+                throw new Error('At least one ticket type is required for paid events');
+            }
+            
+            // If changing from paid to free and there are registrations, reject
+            // Otherwise, deactivate all tickets
+            if (eventData.isFree === true) {
+                const registrationCount = await prisma.registration.count({
+                    where: { eventId }
+                });
+                
+                if (registrationCount > 0) {
+                    throw new Error('Cannot change a paid event to free when registrations exist');
+                }
+                else {
+                    // Deactivate tickets
+                    await prisma.ticket.updateMany({
+                        where: { eventId },
+                        data: { status: 'INACTIVE' }
+                    });
+                }
+            }
+            
+            // Add more validation here
+        }
+
+        // Update the event
+        return prisma.$transaction(async (tx) => {
+            // 01 - Udpdate the event basic information
+            const updatedEvent = await tx.event.update({
+                where: { id: eventId },
+                data: {
+                    name: eventData.name,
+                    description: eventData.description,
+                    location: eventData.location,
+                    capacity: eventData.capacity,
+                    eventType: eventData.eventType,
+                    isFree: eventData.isFree,
+                    startDateTime: eventData.startDateTime ? new Date(eventData.startDateTime) : undefined,
+                    endDateTime: eventData.endDateTime ? new Date(eventData.endDateTime) : undefined
+                }
+            });
+
+            // 02 - Handle ticket changes if provided and the event is paid
+            if (!updatedEvent.isFree && eventData.tickets && eventData.tickets.length > 0) {
+                // 02.1 -  Delete existing tickets
+                await tx.ticket.deleteMany({
+                    where: { eventId, quantitySold: 0 } // Exclude sold tickets
+                });
+
+                // 02.2 - Create new tickets
+                await Promise.all(
+                    eventData.tickets.map(async (ticket) => {
+                        return tx.ticket.create({
+                            data: {
+                                eventId: updatedEvent.id,
+                                name: ticket.name,
+                                description: ticket.description,
+                                price: ticket.price,
+                                quantityTotal: ticket.quantityTotal,
+                                quantitySold: 0,
+                                salesStart: new Date(ticket.salesStart),
+                                salesEnd: new Date(ticket.salesEnd)
+                            }
+                        });
+                    })
+                );
+            }
+
+            // 03 - Handle question changes if provided
+            // TODO: need to check question update logic , and possibly convert to a separate function
+
+            // Delete questions without responses and create new questions
+            if (eventData.questions && eventData.questions.length > 0) {
+                // 03.1 - Get existing questions with responses
+                const questionsWithResponses = await tx.eventQuestions.findMany({
+                    where: {
+                        eventId,
+                        responses: {
+                            some: {}
+                        }
+                    },
+                    select: {
+                        id: true
+                    }
+                });
+                
+                const questionsWithResponseIds = questionsWithResponses.map(q => q.id);
+                
+                // Delete questions that don't have responses
+                await tx.eventQuestions.deleteMany({
+                    where: {
+                        eventId,
+                        id: {
+                            notIn: questionsWithResponseIds
+                        }
+                    }
+                });
+                
+                // Create new questions
+                for (const q of eventData.questions) {
+                    const question = await tx.question.create({
+                        data: {
+                            questionText: q.questionText,
+                            questionType: 'TEXT'
+                        }
+                    });
+                    
+                    await tx.eventQuestions.create({
+                        data: {
+                            eventId,
+                            questionId: question.id,
+                            isRequired: q.isRequired,
+                            displayOrder: q.displayOrder
+                        }
+                    });
+                }
+            }
+
+            // 04 - Return the updated event with all details
+            return this.getEventWithDetails(eventId);
         });
     }
 
 
     // 05 -  Delete event
     static async deleteEvent(eventId: number) {
-        return prisma.event.delete({
-            where: { id: eventId }
-        });
+        
     }
 }
