@@ -451,12 +451,13 @@ export class EventService {
             throw new Error('Cancelled events can only be restored to draft status');
         }
         
-        // For publishing, verify the event has questions
+        // For publishing, verify the event has questions and tickets (if paid)
         if (status === 'PUBLISHED') {
+
+            // Get question count
             const questionCount = await prisma.eventQuestions.count({
                 where: { eventId }
             });
-            
             if (questionCount === 0) {
                 throw new Error('Events must have at least one question before publishing');
             }
@@ -506,6 +507,38 @@ export class EventService {
 
     // 05 -  Delete event
     static async deleteEvent(eventId: number) {
+        // Verify event exists
+        const existingEvent = await this.getEventById(eventId);
+
+        if (!existingEvent) {
+            throw new Error('Event not found');
+        }
         
+        // Check for registrations
+        const registrationCount = await prisma.registration.count({
+            where: { eventId }
+        });
+        
+        if (registrationCount > 0) {
+            throw new Error('Cannot delete an event with registrations. Please cancel the event instead.');
+        }
+        
+        // Delete the event
+        return prisma.$transaction(async (tx) => {
+            // Delete related records
+            await tx.eventQuestions.deleteMany({
+                where: { eventId }
+            });
+            
+            // Delete tickets
+            await tx.ticket.deleteMany({
+                where: { eventId }
+            });
+            
+            // Delete the event
+            return tx.event.delete({
+                where: { id: eventId }
+            });
+        });
     }
 }
