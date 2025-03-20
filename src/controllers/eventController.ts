@@ -18,7 +18,7 @@ export class EventController {
             const organiserId = 1; // Hardcoded for now
 
             if (!organiserId) {
-                return res.status(401).json({
+                res.status(401).json({
                     success: false,
                     message: 'Authentication required'
                 });
@@ -29,7 +29,8 @@ export class EventController {
 
             res.status(201).json({
                 success: true,
-                data: event
+                data: event,
+                message: 'Event created successfully'
             });
         }
         catch (error) {
@@ -104,20 +105,21 @@ export class EventController {
     }
 
     /**
-     * 
-     * @param req 03 - Get event by ID
+     * 03 - Get event by ID
+     * @param req 
      * @param res 
      */
-    static async getEventById(req: Request, res: Response) {
+    static async getEventById(req: Request, res: Response) : Promise<void> {
         try {
             const eventId = Number(req.params.id);
             
             // Validate event ID
             if (isNaN(eventId)) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: 'Invalid event ID'
                 });
+                return;
             }
 
             const event = await EventService.getEventWithDetails(eventId);
@@ -138,11 +140,38 @@ export class EventController {
         }
     }
 
-    //4 - Update event
+    /**
+     * 04 - Update event
+     * @param req 
+     * @param res 
+     * @returns 
+     */
     static async updateEvent(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
-            const event = await EventService.updateEvent(eventId, req.body)
+            const userId = req.user?.user_id;
+
+            if (isNaN(eventId)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Invalid event ID'
+                });
+            }
+
+            //Verify ownership if not admin
+            if (req.user?.role !== 'ADMIN') {
+                const event = await EventService.getEventById(eventId);
+
+                if (event.organiserId !== userId) {
+                    res.status(403).json({
+                        success: false,
+                        message: 'You are not authorized to delete this event'
+                    });
+                }
+            }
+
+            // Update event
+            const event = await EventService.updateEvent(eventId, req.body);
 
             res.status(200).json({
                 success: true,
@@ -150,6 +179,8 @@ export class EventController {
             });
         }
         catch(error) {
+            console.error('Error updating event:', error);
+
             res.status(500).json({
                 success: false,
                 message: 'Error updating event',
@@ -158,24 +189,111 @@ export class EventController {
         }
     }
 
-    //5 - Delete event
-    static async deleteEvent(req: Request, res: Response) {
+    /**
+     * 05 - Update event status
+     * @param req 
+     * @param res 
+     * @returns 
+     */
+    static async updateEventStatus(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
-            await EventService.deleteEvent(eventId);
+            const status = req.body.status;
+            const userId = req.user?.user_id;
 
-            res.status(204).json({
+            if (isNaN(eventId)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Invalid event ID'
+                });
+            }
+
+            // Verify ownership if not admin
+            if (req.user?.role !== 'ADMIN') {
+                const event = await EventService.getEventById(eventId);
+
+                if (event.organiserId !== userId) {
+                    res.status(403).json({
+                        success: false,
+                        message: 'You are not authorized to update this event'
+                    });
+                }
+            }
+
+            // Validate status
+            if (!['DRAFT', 'PUBLISHED', 'CANCELLED'].includes(status)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Invalid status. Must be DRAFT, PUBLISHED, or CANCELLED'
+                });
+            }
+
+            // Update event status
+            const event = await EventService.updateEventStatus(eventId, status);
+
+            res.status(200).json({
                 success: true,
-                message: 'Event deleted'
+                data: event
             });
         }
-        catch(err) {
-            console.log(err);
+        catch (error) {
+            console.error('Error updating event status:', error);
 
             res.status(500).json({
                 success: false,
-                message: 'Error deleting event'
-            })
+                message: 'Error updating event status',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    /**
+     * 06 - Delete event
+     * @param req 
+     * @param res 
+     * @returns 
+     */
+    static async deleteEvent(req: Request, res: Response) {
+        try {
+            const eventId = Number(req.params.id);
+            const userId = req.user?.user_id;
+
+            //Validate event ID
+            if (isNaN(eventId)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Invalid event ID'
+                });
+            }
+
+            //Verify ownership if not admin
+            if (req.user?.role !== 'ADMIN') {
+                const event = await EventService.getEventById(eventId);
+
+                if (event.organiserId !== userId) {
+                    res.status(403).json({
+                        success: false,
+                        message: 'You are not authorized to delete this event'
+                    });
+                }
+            }
+
+            // Delete event
+            await EventService.deleteEvent(eventId);
+
+            res.status(200).json({
+                success: true,
+                message: 'Event deleted successfully'
+            });
+        }
+        catch(err) {
+            console.error('Error deleting event:', err);
+
+            res.status(500).json({
+                success: false,
+                message: 'Error deleting event',
+                error: err instanceof Error ? err.message : 'Unknown error'
+            });
         }
     }
 

@@ -215,7 +215,12 @@ export class EventService {
      */
     static async getEventById(eventId: number) {
         const event = await prisma.event.findUnique({
-            where: { id: eventId }
+            where: { id: eventId },
+            include: {
+                _count: {
+                    select: { registrations: true },
+                },
+            }
         });
 
         if (!event) {
@@ -505,7 +510,11 @@ export class EventService {
         return updatedEvent;
     }
 
-    // 05 -  Delete event
+    /**
+     * 06 - Delete an event
+     * @param eventId 
+     * @returns 
+     */
     static async deleteEvent(eventId: number) {
         // Verify event exists
         const existingEvent = await this.getEventById(eventId);
@@ -514,7 +523,7 @@ export class EventService {
             throw new Error('Event not found');
         }
         
-        // Check for registrations
+        // Check for registrations, if any, reject and suggest cancellation
         const registrationCount = await prisma.registration.count({
             where: { eventId }
         });

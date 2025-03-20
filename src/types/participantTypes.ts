@@ -1,4 +1,4 @@
-export interface ParticipantProfileDto {
+export interface ParticipantDto {
     email: string;
     firstName: string;
     lastName: string;
