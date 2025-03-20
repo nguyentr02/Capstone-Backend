@@ -3,7 +3,12 @@ import { CreateEventDTO, EventFilters, EventResponse } from '../types/eventTypes
 
 export class EventService {
 
-    // 01 - Create a new event
+    /**
+     * 01 - Create a new event
+     * @param organizerId 
+     * @param eventData 
+     * @returns 
+     */
     static async createEvent(organizerId: number, eventData: CreateEventDTO) {
         
         // Make sure the event end date is after the start date
@@ -16,19 +21,21 @@ export class EventService {
             throw new Error('Event start date must be in the future');
         }
 
-        // Validate tickets
-        if (!eventData.tickets || eventData.tickets.length === 0) {
-            throw new Error('At least one ticket type is required');
-        }
-
-        // Check ticket dates
-        for (const ticket of eventData.tickets) {
-            if (new Date(ticket.salesEnd) <= new Date(ticket.salesStart)) {
-                throw new Error('Ticket sales end date must be after sales start date');
+        // Validate tickets only for paid events
+        if (!eventData.isFree) {
+            if (!eventData.tickets || eventData.tickets.length === 0) {
+                throw new Error('At least one ticket type is required');
             }
-            
-            if (new Date(ticket.salesEnd) > new Date(eventData.endDateTime)) {
-                throw new Error('Ticket sales cannot end after the event ends');
+    
+            // Check ticket dates
+            for (const ticket of eventData.tickets) {
+                if (new Date(ticket.salesEnd) <= new Date(ticket.salesStart)) {
+                    throw new Error('Ticket sales end date must be after sales start date');
+                }
+                
+                if (new Date(ticket.salesEnd) > new Date(eventData.endDateTime)) {
+                    throw new Error('Ticket sales cannot end after the event ends');
+                }
             }
         }
 
