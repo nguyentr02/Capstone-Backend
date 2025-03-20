@@ -50,29 +50,34 @@ export class EventService {
                     location: eventData.location,
                     capacity: eventData.capacity,
                     eventType: eventData.eventType,
+                    isFree: eventData.isFree,
                     startDateTime: new Date(eventData.startDateTime),
                     endDateTime: new Date(eventData.endDateTime),
                     status: 'DRAFT'
                 }
             });
 
-            // 2 - Create the tickets and link them to the event
-            const eventTickets = await Promise.all(
-                eventData.tickets.map(async (ticket) => {
-                    return tx.ticket.create({
-                        data: {
-                            eventId: event.id,
-                            name: ticket.name,
-                            description: ticket.description,
-                            price: ticket.price,
-                            quantityTotal: ticket.quantityTotal,
-                            quantitySold: 0,
-                            salesStart: new Date(ticket.salesStart),
-                            salesEnd: new Date(ticket.salesEnd)
-                        }
-                    });
-                })
-            );
+            // 2 - Create the tickets and link them to the event (paid events only)
+            let eventTickets : any = [];
+            if (!eventData.isFree && eventData.tickets && eventData.tickets.length > 0) {
+                eventTickets = await Promise.all(
+                    eventData.tickets.map(async (ticket) => {
+                        return tx.ticket.create({
+                            data: {
+                                eventId: event.id,
+                                name: ticket.name,
+                                description: ticket.description,
+                                price: ticket.price,
+                                quantityTotal: ticket.quantityTotal,
+                                quantitySold: 0,
+                                salesStart: new Date(ticket.salesStart),
+                                salesEnd: new Date(ticket.salesEnd)
+                            }
+                        });
+                    })
+                );
+            }
+            
 
             // 3 - Create the questions and link them to the event
             const eventQuestions = await Promise.all(
