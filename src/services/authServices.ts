@@ -101,7 +101,7 @@ export class AuthService {
                 token, 
                 process.env.REFRESH_TOKEN_SECRET!
             ) as RefreshTokenPayload;
-            
+                  
             // Find the user
             const user = await prisma.user.findUnique({ where: { id: payload.user_id } });
             if (!user) {throw new AuthenticationError('Invalid refresh token');}
@@ -109,12 +109,12 @@ export class AuthService {
             // Generate new tokens
             const accessToken = this.generateAccessToken(user);
             const newRefreshToken = this.generateRefreshToken(user.id);
-
+            console.log(accessToken);
             return { accessToken, refreshToken: newRefreshToken };
 
         }
         catch (error){
-            throw new AuthenticationError('Invalid refresh token');
+            throw new AuthenticationError('Invalid refresh token');  
         }
     }
 

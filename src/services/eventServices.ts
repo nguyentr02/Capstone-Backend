@@ -110,50 +110,51 @@ export class EventService {
         // 2. Build the where condition object
         const where: any = {};
 
-            // 2.1. Status filter
-            if (filters.status) {
-                where.status = filters.status;
-            }
-            else {
-                where.status = "PUBLISHED";
-            }
+        // 2.1. Status filter
+        if (filters.status) {
+            where.status = filters.status;
+        }
+        else {
+            where.status = "PUBLISHED";
+        }
 
-            // 2.2. Text search filter
-            if (filters.search) {
-                where.OR = [
-                    { name: { contains: filters.search } },
-                    { description: { contains: filters.search } }
-                ];
-            }
+        // 2.2. Text search filter
+        if (filters.search) {
+            where.OR = [
+                { name: { contains: filters.search } },
+                { description: { contains: filters.search } }
+            ];
+        }
 
-            // 2.3. Event type filter
-            if (filters.eventType) {
-                where.eventType = filters.eventType;
-            }
+        // 2.3. Event type filter
+        if (filters.eventType) {
+            where.eventType = filters.eventType;
+        }
 
-            // 2.4. Location filter
-            if (filters.location) {
-                where.eventType = filters.location;
-            }
+        // 2.4. Location filter
+        if (filters.location) {
+            where.eventType = filters.location;
+        }
 
-            // 2.5. Date filters
-            if (filters.startDate) {
-                where.startDateTime = { gte: filters.startDate };
-            }
-            
-            if (filters.endDate) {
-                where.endDateTime = { lte: filters.endDate };
-            }
-            
-            // 2.6. Organizer filter
-            if (filters.organizerId) {
-                where.organiserId = filters.organizerId;
-            }
+        // 2.5. Date filters
+        if (filters.startDate) {
+            where.startDateTime = { gte: filters.startDate };
+        }
+        
+        if (filters.endDate) {
+            where.endDateTime = { lte: filters.endDate };
+        }
+        
+        // 2.6. Organizer filter
+        if (filters.organizerId) {
+            where.organiserId = filters.organizerId;
+        }
+
 
         //3. Get the events with the filters and pagination
         const [events, total] = await Promise.all([ 
             prisma.event.findMany({
-                // where,
+                where: {},
                 skip,
                 take: limit,
                 orderBy: {
@@ -178,7 +179,7 @@ export class EventService {
                 }
 
             }),
-            prisma.event.count({ where }) // Count the total number of events
+            prisma.event.count({ where: {}}) // Count the total number of events
         ]);
 
         // 4. Return the events and total count with pagination

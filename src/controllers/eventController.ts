@@ -133,23 +133,27 @@ export class EventController {
     }
 
     //5 - Delete event
-    static async deleteEvent(req: Request, res: Response) {
+    static async deleteEvent(req: Request, res: Response):Promise<void> {
         try {
-            const eventId = Number(req.params.id);
-            await EventService.deleteEvent(eventId);
 
-            res.status(204).json({
+            const eventId = Number(req.params.id);
+            const deletedEvent = await EventService.deleteEvent(eventId);
+
+            res.status(200).json({
                 success: true,
-                message: 'Event deleted'
+                data: deletedEvent
             });
+
         }
-        catch(err) {
-            console.log(err);
+        catch(error) {
+            console.error('Delete event error:', error);
 
             res.status(500).json({
                 success: false,
-                message: 'Error deleting event'
-            })
+                message: error instanceof Error ? error.message : 'Unknown error',
+                error: process.env.NODE_ENV !== 'production' ? String(error) : undefined
+            });
+
         }
     }
 
