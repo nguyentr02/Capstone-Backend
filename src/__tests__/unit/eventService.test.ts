@@ -340,6 +340,34 @@ describe('EventService', () => {
     });
 
     describe('getEventById', () => {});
-    describe('deleteEvent', () => {});
     
+    // Test cases for deleteEvent method
+    describe('deleteEvent', () => {
+      it('should delete an event without registrations', async () => {
+          // Mock data
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue({ id: 1 });
+          (prisma.registration.count as jest.Mock).mockResolvedValue(0);
+          
+          // Call service
+          await EventService.deleteEvent(1);
+          
+          // Assertions
+          expect(prisma.eventQuestions.deleteMany).toHaveBeenCalled();
+          expect(prisma.ticket.deleteMany).toHaveBeenCalled();
+          expect(prisma.event.delete).toHaveBeenCalledWith({
+              where: { id: 1 }
+          });
+      });
+      
+      it('should reject deleting an event with registrations', async () => {
+          // Mock data
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue({ id: 1 });
+          (prisma.registration.count as jest.Mock).mockResolvedValue(5);
+          
+          // Expect error
+          await expect(EventService.deleteEvent(1))
+              .rejects
+              .toThrow('Cannot delete an event with registrations');
+      });
+  });
 })
