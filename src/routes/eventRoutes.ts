@@ -5,11 +5,29 @@ import { validateEventCreation} from '../middlewares/eventValidation';
 
 const router = Router();
 
-router.get('/events', EventController.getAllEvents);
-router.get('/events/:id', EventController.getEventById);
+// Public routes
+router.get('/', EventController.getAllEvents);
+router.get('/:id', EventController.getEventById);
 
-router.post('/events', authenticate, authorize('ORGANIZER'), EventController.createEvent);
-router.put('/events/:id', authenticate, authorize('ORGANIZER'), EventController.updateEvent);
-router.delete('/events/:id', authenticate, authorize('ORGANIZER'), EventController.deleteEvent);
+// Protected routes (organizers only)
+router.post('/', 
+    authenticate, 
+    EventController.createEvent);
+
+router.put('/:id', 
+    authenticate, 
+    authorize('ORGANIZER'), 
+    EventController.updateEvent);
+
+router.delete('/:id', 
+    authenticate, 
+    authorize('ORGANIZER'), 
+    EventController.deleteEvent);
+
+router.patch('/:id/status', 
+    authenticate, 
+    authorize('ORGANIZER', 'ADMIN'),
+    EventController.updateEventStatus
+);
 
 export default router;
