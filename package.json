@@ -22,7 +22,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^6.5.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",

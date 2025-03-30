@@ -6,10 +6,10 @@ export interface CreateEventDTO {
     location: string,
     capacity: number,
     eventType: 'SPORTS' | 'MUSICAL' | 'SOCIAL' | 'VOLUNTEERING',
-
+    isFree: boolean,
     startDateTime: Date | string,
     endDateTime: Date | string,
-    tickets: Array<{
+    tickets?: Array<{
         name: string;
         description?: string;
         price: number;
@@ -30,6 +30,7 @@ export type EventResponse = {
     name: string,
     description: string | null,
     location: string,
+    isFree: boolean,
     startDateTime: Date,
     endDateTime: Date,
     status: string,
@@ -49,4 +50,5 @@ export interface EventFilters {
     location?: string;
     organizerId?: number;
     status?: string;
+    isFree?: boolean;
 }
