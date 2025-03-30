@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 // --We don't want to actually connect to a database during unit tests
 // --We want to control the behavior of these external dependencies
 //--We want our tests to run quickly and reliably
+
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
 jest.mock('../../config/prisma', () => ({
@@ -26,10 +27,10 @@ describe('AuthService', () => {
         jest.clearAllMocks();
     })
 
-    
+
     describe('register', () => {
         const registerData = {
-            email: "test@example.com", 
+            email: "test@example.com",
             password: "password123",
             firstName: "John",
             lastName: "Doe",
@@ -65,11 +66,11 @@ describe('AuthService', () => {
             expect(bcrypt.hash).toHaveBeenCalledWith(registerData.password, 10); // Check if password was hashed
             expect(prisma.user.create).toHaveBeenCalledWith({ // Check if user was created
                 data: {
-                    ...registerData, 
+                    ...registerData,
                     password: hashedPassword,
                     role: 'PARTICIPANT'
                 }
-            }); 
+            });
 
             // Check the returned data
             expect(result.user).toEqual(expect.objectContaining({
@@ -84,9 +85,9 @@ describe('AuthService', () => {
         //Test 2: Error handling for existing user
         it('should throw an error if the email already exists', async () => {
             // Mock findUnique
-            (prisma.user.findUnique as jest.Mock).mockResolvedValue({id : 1});
+            (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 1 });
 
-            
+
         });
     });
 });

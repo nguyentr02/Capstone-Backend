@@ -96,6 +96,6 @@ npm run db:setup
 ### Reseting the database
 If somehow you need to reset the database to a clean state, run
 ```bash 
-npm run db:setup
+npm run db:reset
 ```
 This will drop all tables, reapply migrations, and reseed the database.
