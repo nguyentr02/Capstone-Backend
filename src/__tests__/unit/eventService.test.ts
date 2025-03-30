@@ -205,6 +205,7 @@ describe('EventService', () => {
 
     });
 
+    // Test cases for updateEvent method
     describe('updateEvent', () => {
       it('should update event basic details', async () => {
           // Mock data
@@ -281,6 +282,64 @@ describe('EventService', () => {
       });
     });
 
-    describe('getEvent', () => {});
+    // Test cases for updateEventStatus method
+    describe('updateEventStatus', () => {
+
+      it('should publish an event with valid data', async () => {
+          // Mock data
+          const draftEvent = { id: 1, status: 'DRAFT', isFree: true };
+          
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue(draftEvent);
+          (prisma.eventQuestions.count as jest.Mock).mockResolvedValue(1);
+          (prisma.event.update as jest.Mock).mockResolvedValue({ ...draftEvent, status: 'PUBLISHED' });
+          
+          // Call service
+          const result = await EventService.updateEventStatus(1, 'PUBLISHED');
+          
+          // Assertions
+          expect(result.status).toBe('PUBLISHED');
+          expect(prisma.event.update).toHaveBeenCalledWith({
+              where: { id: 1 },
+              data: { status: 'PUBLISHED' }
+          });
+      });
+      
+      it('should cancel an event and update registrations', async () => {
+          // Mock data
+          const publishedEvent = { id: 1, status: 'PUBLISHED', isFree: true };
+          
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue(publishedEvent);
+          (prisma.registration.count as jest.Mock).mockResolvedValue(5);
+          (prisma.event.update as jest.Mock).mockResolvedValue({ ...publishedEvent, status: 'CANCELLED' });
+          
+          // Call service
+          const result = await EventService.updateEventStatus(1, 'CANCELLED');
+          
+          // Assertions
+          expect(result.status).toBe('CANCELLED');
+          expect(prisma.registration.updateMany).toHaveBeenCalledWith({
+              where: expect.any(Object),
+              data: { status: 'CANCELLED' }
+          });
+      });
+      
+      it('should reject publishing an event without questions', async () => {
+          // Mock data
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue({
+              id: 1, 
+              status: 'DRAFT',
+              isFree: true
+          });
+          (prisma.eventQuestions.count as jest.Mock).mockResolvedValue(0);
+          
+          // Expect error
+          await expect(EventService.updateEventStatus(1, 'PUBLISHED'))
+              .rejects
+              .toThrow('Events must have at least one question before publishing');
+      });
+    });
+
+    describe('getEventById', () => {});
+    describe('deleteEvent', () => {});
     
 })
