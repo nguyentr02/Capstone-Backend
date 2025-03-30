@@ -10,8 +10,24 @@ router.get('/', EventController.getAllEvents);
 router.get('/:id', EventController.getEventById);
 
 // Protected routes (organizers only)
-router.post('/', authenticate, EventController.createEvent);
-router.put('/:id', authenticate, authorize('ORGANIZER'), EventController.updateEvent);
-router.delete('/:id', authenticate, authorize('ORGANIZER'), EventController.deleteEvent);
+router.post('/', 
+    authenticate, 
+    EventController.createEvent);
+
+router.put('/:id', 
+    authenticate, 
+    authorize('ORGANIZER'), 
+    EventController.updateEvent);
+
+router.delete('/:id', 
+    authenticate, 
+    authorize('ORGANIZER'), 
+    EventController.deleteEvent);
+
+router.patch('/:id/status', 
+    authenticate, 
+    authorize('ORGANIZER', 'ADMIN'),
+    EventController.updateEventStatus
+);
 
 export default router;
