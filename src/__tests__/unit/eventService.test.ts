@@ -151,7 +151,62 @@ describe('EventService', () => {
       });
     });
 
-    describe('getAllEvents', () => {});
+    // Test cases for getAllEvents method
+    describe('getAllEvents', () => {
+      it('should return events and pagination', async () => {
+        // Mock data
+        const mockEvents = [{ id: 1, name: 'Test Event' }];
+        const mockCount = 1;
+        
+        (prisma.event.findMany as jest.Mock).mockResolvedValue(mockEvents);
+        (prisma.event.count as jest.Mock).mockResolvedValue(mockCount);
+        
+        // Call service
+        const result = await EventService.getAllEvents({ page: 1, limit: 10 });
+        
+        // Assertions
+        expect(result.events).toEqual(mockEvents);
+        expect(result.pagination).toEqual({
+            total: mockCount,
+            page: 1,
+            limit: 10,
+            pages: 1
+        });
+      });
+
+      it('should apply filters correctly', async () => {
+        // Mock response
+        (prisma.event.findMany as jest.Mock).mockResolvedValue([]);
+        (prisma.event.count as jest.Mock).mockResolvedValue(0);
+        
+        // Call with filters
+        await EventService.getAllEvents({
+            page: 1,
+            limit: 10,
+            filters: {
+                search: 'concert',
+                eventType: 'MUSICAL',
+                isFree: false
+            }
+        });
+        
+        // Check filters were applied
+        expect(prisma.event.findMany).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: expect.objectContaining({
+                    OR: expect.any(Array),
+                    eventType: 'MUSICAL',
+                    isFree: false
+                })
+            })
+        );
+      });
+
+
+    });
+
+    describe('updateEvent', () => {});
+
     describe('getEvent', () => {});
     
 })
