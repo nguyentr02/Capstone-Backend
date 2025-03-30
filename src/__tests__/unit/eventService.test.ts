@@ -205,7 +205,81 @@ describe('EventService', () => {
 
     });
 
-    describe('updateEvent', () => {});
+    describe('updateEvent', () => {
+      it('should update event basic details', async () => {
+          // Mock data
+          const existingEvent = { 
+              id: 1, 
+              name: 'Old Name', 
+              isFree: false,
+              status: 'DRAFT'
+          };
+          const updateData = { name: 'New Name' };
+          
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue(existingEvent);
+          (prisma.event.update as jest.Mock).mockResolvedValue({ ...existingEvent, ...updateData });
+          
+          // Call service
+          await EventService.updateEvent(1, updateData);
+          
+          // Assertions
+          expect(prisma.event.update).toHaveBeenCalledWith({
+              where: { id: 1 },
+              data: expect.objectContaining({
+                  name: 'New Name'
+              })
+          });
+      });
+      
+      it('should reject updates to completed events', async () => {
+          // Mock completed event
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue({
+              id: 1,
+              status: 'COMPLETED'
+          });
+          
+          // Expect error
+          await expect(EventService.updateEvent(1, { name: 'New Name' }))
+              .rejects
+              .toThrow('Cannot update a completed event');
+      });
+      
+      it('should handle changing from free to paid correctly', async () => {
+          // Mock data
+          const existingEvent = { 
+              id: 1, 
+              name: 'Event', 
+              isFree: true,
+              status: 'DRAFT'
+          };
+          const updateData = { 
+              isFree: false,
+              tickets: [{
+                  name: "General Admission",
+                  price: 50,
+                  quantityTotal: 100,
+                  salesStart: new Date(),
+                  salesEnd: tomorrow
+              }]
+          };
+          
+          (prisma.event.findUnique as jest.Mock).mockResolvedValue(existingEvent);
+          (prisma.event.update as jest.Mock).mockResolvedValue({ ...existingEvent, isFree: false });
+          (prisma.registration.count as jest.Mock).mockResolvedValue(0);
+          
+          // Call service
+          await EventService.updateEvent(1, updateData);
+          
+          // Assertions
+          expect(prisma.event.update).toHaveBeenCalledWith({
+              where: { id: 1 },
+              data: expect.objectContaining({
+                  isFree: false
+              })
+          });
+          expect(prisma.ticket.create).toHaveBeenCalled();
+      });
+    });
 
     describe('getEvent', () => {});
     
