@@ -1,16 +1,16 @@
-import {prisma} from '../config/prisma';
+import { prisma } from '../config/prisma';
 import { CreateEventDTO, EventFilters, EventResponse } from '../types/eventTypes';
 
 export class EventService {
 
     /**
      * 01 - Create a new event
-     * @param organizerId 
+     * @param organiserId 
      * @param eventData 
      * @returns 
      */
-    static async createEvent(organizerId: number, eventData: CreateEventDTO) {
-        
+    static async createEvent(organiserId: number, eventData: CreateEventDTO) {
+
         // Make sure the event end date is after the start date
         if (new Date(eventData.endDateTime) < new Date(eventData.startDateTime)) {
             throw new Error('Event end date must be after the start date');
@@ -26,25 +26,25 @@ export class EventService {
             if (!eventData.tickets || eventData.tickets.length === 0) {
                 throw new Error('At least one ticket type is required');
             }
-    
+
             // Check ticket dates
             for (const ticket of eventData.tickets) {
                 if (new Date(ticket.salesEnd) <= new Date(ticket.salesStart)) {
                     throw new Error('Ticket sales end date must be after sales start date');
                 }
-                
+
                 if (new Date(ticket.salesEnd) > new Date(eventData.endDateTime)) {
                     throw new Error('Ticket sales cannot end after the event ends');
                 }
             }
         }
 
-        
-        return prisma.$transaction( async (tx) => {
+
+        return prisma.$transaction(async (tx) => {
             // 1 - Create the event
             const event = await tx.event.create({
                 data: {
-                    organiserId: organizerId,
+                    organiserId: organiserId,
                     name: eventData.name,
                     description: eventData.description,
                     location: eventData.location,
@@ -58,7 +58,7 @@ export class EventService {
             });
 
             // 2 - Create the tickets and link them to the event (paid events only)
-            let eventTickets : any = [];
+            let eventTickets: any = [];
             if (!eventData.isFree && eventData.tickets && eventData.tickets.length > 0) {
                 eventTickets = await Promise.all(
                     eventData.tickets.map(async (ticket) => {
@@ -77,23 +77,23 @@ export class EventService {
                     })
                 );
             }
-            
+
             // 3 - Create the questions and link them to the event
             const eventQuestions = await Promise.all(
 
                 // Map over the questions array
-                eventData.questions.map(async (q) => { 
+                eventData.questions.map(async (q) => {
                     // 3.1 - Create the question
                     const question = await tx.question.create({
-                        data : {
+                        data: {
                             questionText: q.questionText,
                             questionType: 'TEXT', // Default to text for now
                         }
-                    });  
-                    
+                    });
+
                     // 3.2 - Link the question to the event
                     return tx.eventQuestions.create({
-                        data : {
+                        data: {
                             eventId: event.id,
                             questionId: question.id,
                             isRequired: q.isRequired,
@@ -111,16 +111,16 @@ export class EventService {
             };
         });
     };
-    
+
     /**
      * 02 - Get all events with pagination and filters
      * @param param0 
      * @returns 
      */
     static async getAllEvents({ page = 1, limit = 10, filters = {} as EventFilters }) {
-        
+
         // 1. Calculate the number of items to skip
-        const skip = (page - 1) * limit;   
+        const skip = (page - 1) * limit;
 
         // 2. Build the where condition object
         const where: any = {};
@@ -155,11 +155,11 @@ export class EventService {
         if (filters.startDate) {
             where.startDateTime = { gte: filters.startDate };
         }
-        
+
         if (filters.endDate) {
             where.endDateTime = { lte: filters.endDate };
         }
-        
+
         // 2.6. Organizer filter
         if (filters.organizerId) {
             where.organiserId = filters.organizerId;
@@ -167,14 +167,14 @@ export class EventService {
 
 
         //3. Get the events with the filters and pagination
-        const [events, total] = await Promise.all([ 
+        const [events, total] = await Promise.all([
             prisma.event.findMany({
                 where,
                 skip,
                 take: limit,
                 orderBy: {
                     startDateTime: 'asc'  // Show upcoming events first
-                  },
+                },
                 include: {
                     organizer: {
                         select: {
@@ -188,12 +188,12 @@ export class EventService {
                     },
                     _count: {
                         select: {
-                            registrations : true // Count number of registrations
+                            registrations: true // Count number of registrations
                         }
                     }
                 }
             }),
-            prisma.event.count({ where: {}}) // Count the total number of events
+            prisma.event.count({ where: {} }) // Count the total number of events
         ]);
 
         // 4. Return the events and total count with pagination
@@ -201,7 +201,7 @@ export class EventService {
             events,
             pagination: {
                 total,
-                page, 
+                page,
                 limit,
                 pages: Math.ceil(total / limit)
             }
@@ -228,9 +228,9 @@ export class EventService {
         }
 
         return event;
-        
+
     }
-    
+
     /**
      * 04 - Get event with details
      * @param eventId 
@@ -258,7 +258,7 @@ export class EventService {
                         displayOrder: 'asc'
                     }
                 },
-                _count : {
+                _count: {
                     select: {
                         registrations: true
                     }
@@ -279,7 +279,7 @@ export class EventService {
      * @param eventData 
      * @returns 
      */
-    static async updateEvent (eventId: number, eventData: Partial<CreateEventDTO>) {
+    static async updateEvent(eventId: number, eventData: Partial<CreateEventDTO>) {
         // Verify that event exists
         const existingEvent = await prisma.event.findUnique({
             where: { id: eventId }
@@ -311,19 +311,19 @@ export class EventService {
 
         // Check if changing from free to paid
         if (eventData.isFree !== undefined && eventData.isFree !== existingEvent.isFree) {
-            
+
             // If changing from free to paid, tickets must be provided
             if (eventData.isFree === false && (!eventData.tickets || eventData.tickets.length === 0)) {
                 throw new Error('At least one ticket type is required for paid events');
             }
-            
+
             // If changing from paid to free and there are registrations, reject
             // Otherwise, deactivate all tickets
             if (eventData.isFree === true) {
                 const registrationCount = await prisma.registration.count({
                     where: { eventId }
                 });
-                
+
                 if (registrationCount > 0) {
                     throw new Error('Cannot change a paid event to free when registrations exist');
                 }
@@ -335,7 +335,7 @@ export class EventService {
                     });
                 }
             }
-            
+
             // Add more validation here
         }
 
@@ -399,9 +399,9 @@ export class EventService {
                         id: true
                     }
                 });
-                
+
                 const questionsWithResponseIds = questionsWithResponses.map(q => q.id);
-                
+
                 // Delete questions that don't have responses
                 await tx.eventQuestions.deleteMany({
                     where: {
@@ -411,7 +411,7 @@ export class EventService {
                         }
                     }
                 });
-                
+
                 // Create new questions
                 for (const q of eventData.questions) {
                     const question = await tx.question.create({
@@ -420,7 +420,7 @@ export class EventService {
                             questionType: 'TEXT'
                         }
                     });
-                    
+
                     await tx.eventQuestions.create({
                         data: {
                             eventId,
@@ -443,19 +443,19 @@ export class EventService {
      * @param status
      */
     static async updateEventStatus(eventId: number, status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED') {
-        
+
         // Verify event exists
         const existingEvent = await this.getEventById(eventId);
-        
+
         // Validate status transition
         if (existingEvent.status === 'COMPLETED') {
             throw new Error('Cannot change status of a completed event');
         }
-        
+
         if (existingEvent.status === 'CANCELLED' && status !== 'DRAFT') {
             throw new Error('Cancelled events can only be restored to draft status');
         }
-        
+
         // For publishing, verify the event has questions and tickets (if paid)
         if (status === 'PUBLISHED') {
 
@@ -466,47 +466,47 @@ export class EventService {
             if (questionCount === 0) {
                 throw new Error('Events must have at least one question before publishing');
             }
-            
+
             // For paid events, verify tickets exist
             if (!existingEvent.isFree) {
                 const ticketCount = await prisma.ticket.count({
                     where: { eventId }
                 });
-                
+
                 if (ticketCount === 0) {
                     throw new Error('Paid events must have at least one ticket type before publishing');
                 }
             }
         }
-        
+
         // For cancellation, handle existing registrations
         if (status === 'CANCELLED' && existingEvent.status === 'PUBLISHED') {
             const registrationCount = await prisma.registration.count({
                 where: { eventId }
             });
-            
+
             if (registrationCount > 0) {
                 // TODO: Implement: send cancellation notifications here and process refunds for paid events
-                
+
                 // Update all registrations to cancelled
                 await prisma.registration.updateMany({
-                    where: { 
+                    where: {
                         eventId,
                         status: {
                             in: ['CONFIRMED', 'PENDING']
-                        } 
+                        }
                     },
                     data: { status: 'CANCELLED' }
                 });
             }
         }
-        
+
         // Update the event status
         const updatedEvent = await prisma.event.update({
             where: { id: eventId },
             data: { status }
         });
-        
+
         return updatedEvent;
     }
 
@@ -522,28 +522,28 @@ export class EventService {
         if (!existingEvent) {
             throw new Error('Event not found');
         }
-        
+
         // Check for registrations, if any, reject and suggest cancellation
         const registrationCount = await prisma.registration.count({
             where: { eventId }
         });
-        
+
         if (registrationCount > 0) {
             throw new Error('Cannot delete an event with registrations. Please cancel the event instead.');
         }
-        
+
         // Delete the event
         return prisma.$transaction(async (tx) => {
             // Delete related records
             await tx.eventQuestions.deleteMany({
                 where: { eventId }
             });
-            
+
             // Delete tickets
             await tx.ticket.deleteMany({
                 where: { eventId }
             });
-            
+
             // Delete the event
             return tx.event.delete({
                 where: { id: eventId }
