@@ -88,6 +88,7 @@ model Event {
   location      String
   capacity      Int
   eventType     EventType   @map("event_type")
+  isFree        Boolean     @default(false) @map("is_free")
   startDateTime DateTime    @map("start_datetime")
   endDateTime   DateTime    @map("end_datetime")
   status        EventStatus @default(DRAFT)
