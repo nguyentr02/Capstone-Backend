@@ -80,16 +80,7 @@ async function createOrganizer(firstName: string, lastName: string) {
 
 async function createParticipants(count: number) {
   const hashedPassword = await bcrypt.hash('Participant123!', 10);
-  const participants: Array<{ 
-    id: number; 
-    firstName: string; 
-    lastName: string; 
-    email: string; 
-    phoneNo: string | null; 
-    role: string; 
-    password: string; 
-    createdAt: Date; 
-    updatedAt: Date }> = [];
+  const participants = [];
   
   for (let i = 1; i <= count; i++) {
     const participant = await prisma.user.create({
@@ -222,7 +213,7 @@ async function createQuestionsForEvent(eventId: number, includeExtras = false) {
   }
 }
 
-async function createRegistrationsAndResponses(participants: any[], eventId: number) {
+async function createRegistrationsAndResponses(participants, eventId: number) {
   // Get tickets for the event
   const tickets = await prisma.ticket.findMany({
     where: { eventId }

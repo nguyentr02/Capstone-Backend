@@ -24,7 +24,7 @@ export class EventService {
         // Validate tickets only for paid events
         if (!eventData.isFree) {
             if (!eventData.tickets || eventData.tickets.length === 0) {
-                throw new Error('At least one ticket type is required');
+                throw new Error('At least one ticket type is required for paid events');
             }
 
             // Check ticket dates
@@ -38,7 +38,6 @@ export class EventService {
                 }
             }
         }
-
 
         return prisma.$transaction(async (tx) => {
             // 1 - Create the event
