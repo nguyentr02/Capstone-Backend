@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { CreateEventDTO, EventFilters, EventResponse } from '../types/eventTypes';
+import { CreateEventDTO, EventFilters, EventResponse, TicketResponse } from '../types/eventTypes';
 
 export class EventService {
 
@@ -58,7 +58,7 @@ export class EventService {
             });
 
             // 2 - Create the tickets and link them to the event (paid events only)
-            let eventTickets: any = [];
+            let eventTickets: TicketResponse[] = [];
             if (!eventData.isFree && eventData.tickets && eventData.tickets.length > 0) {
                 eventTickets = await Promise.all(
                     eventData.tickets.map(async (ticket) => {
@@ -148,7 +148,7 @@ export class EventService {
 
         // 2.4. Location filter
         if (filters.location) {
-            where.eventType = filters.location;
+            where.location = filters.location;
         }
 
         // 2.5. Date filters

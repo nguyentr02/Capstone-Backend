@@ -16,12 +16,12 @@ router.post('/',
 
 router.put('/:id', 
     authenticate, 
-    authorize('ORGANIZER'), 
+    authorize('ORGANIZER', 'ADMIN'), 
     EventController.updateEvent);
 
 router.delete('/:id', 
     authenticate, 
-    authorize('ORGANIZER'), 
+    authorize('ORGANIZER', 'ADMIN'), 
     EventController.deleteEvent);
 
 router.patch('/:id/status', 
