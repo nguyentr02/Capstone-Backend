@@ -148,7 +148,7 @@ export class EventService {
 
         // 2.4. Location filter
         if (filters.location) {
-            where.location = filters.location;
+            where.location = { contains: filters.location };
         }
 
         // 2.5. Date filters
@@ -161,14 +161,16 @@ export class EventService {
         }
 
         // 2.6. Organizer filter
-        if (filters.organiserId) {
-            where.organiserId = filters.organiserId;
+        if (filters.organiserId !== undefined) {
+            // Look for the organizer ID in the event's organizer relation
+            where.organizerId = filters.organiserId;
         }
 
         //2.7 - Free event filter
-        if (filters.isFree) {
+        if (filters.isFree !== undefined) {
             where.isFree = filters.isFree;
         }
+        else filters.isFree = undefined; // Set to undefined if not provided
 
 
         //3. Get the events with the filters and pagination

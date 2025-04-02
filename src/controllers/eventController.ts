@@ -17,15 +17,6 @@ export class EventController {
             // const organiserId = 2;
             const organiserId = req.user?.userId;
 
-            // // Check if the user is authorized to create an event
-            // if (req.user?.role !== 'ORGANIZER' && req.user?.role !== 'ADMIN') {
-            //     res.status(403).json({
-            //         success: false,
-            //         message: 'You are not authorized to create an event'
-            //     });
-            //     return;
-            // }
-
             if (!organiserId) {
                 res.status(401).json({
                     success: false,

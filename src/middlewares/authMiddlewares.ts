@@ -15,12 +15,21 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
 
+        // Ensure the decoded token has the expected structure
+        if (!decoded.userId) {
+            throw new AuthenticationError('Invalid token format');
+        }
+
         req.user = decoded;
 
         next();
     }
     catch (error) {
-        next(error);
+        if (error instanceof jwt.JsonWebTokenError) {
+            next(new AuthenticationError('Invalid token'));
+        } else {
+            next(error);
+        }
     }
 }
 
