@@ -44,7 +44,7 @@ export interface RefreshTokenPayload {
 
 // JWT Payload structure for access token
 export interface JwtPayload {
-    user_id: number;
+    userId: number;
     role: UserRole;
     iat?: number;
     exp?: number;

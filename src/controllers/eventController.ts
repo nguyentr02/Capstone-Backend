@@ -89,7 +89,7 @@ export class EventController {
             //4. For organizers, allow viewing their own events including drafts
             if (req.user?.role === 'ORGANIZER') {
                 if (req.query.myEvents === 'true') {
-                    filters.organiserId = req.user.user_id;
+                    filters.organiserId = req.user.userId;
                     // If viewing own events, include all statuses
                     filters.status = req.query.status as string;
                 }
@@ -159,7 +159,7 @@ export class EventController {
     static async updateEvent(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
-            const userId = req.user?.user_id;
+            const userId = req.user?.userId;
 
             if (isNaN(eventId)) {
                 res.status(400).json({
@@ -209,7 +209,7 @@ export class EventController {
         try {
             const eventId = Number(req.params.id);
             const status = req.body.status;
-            const userId = req.user?.user_id;
+            const userId = req.user?.userId;
 
             if (isNaN(eventId)) {
                 res.status(400).json({
@@ -266,7 +266,7 @@ export class EventController {
     static async deleteEvent(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
-            const userId = req.user?.user_id;
+            const userId = req.user?.userId;
 
             //Validate event ID
             if (isNaN(eventId)) {
