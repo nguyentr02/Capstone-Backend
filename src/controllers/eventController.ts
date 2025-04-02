@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import { EventService } from '../services/eventServices';
-import { CreateEventDTO, EventFilters } from '../types/eventTypes';
+import { CreateEventDTO, EventFilters} from '../types/eventTypes';
 import { ValidationError } from '../utils/errors';
-import { error } from 'console';
 
 export class EventController {
 
@@ -14,9 +13,18 @@ export class EventController {
     static async createEvent(req: Request<{}, {}, CreateEventDTO>, res: Response) {
         try {
 
-            //TODO: Implement authorization check
-            // const organiserId = 1;
-            const organiserId = req.user?.user_id;
+            
+            // const organiserId = 2;
+            const organiserId = req.user?.userId;
+
+            // // Check if the user is authorized to create an event
+            // if (req.user?.role !== 'ORGANIZER' && req.user?.role !== 'ADMIN') {
+            //     res.status(403).json({
+            //         success: false,
+            //         message: 'You are not authorized to create an event'
+            //     });
+            //     return;
+            // }
 
             if (!organiserId) {
                 res.status(401).json({
@@ -81,7 +89,7 @@ export class EventController {
             //4. For organizers, allow viewing their own events including drafts
             if (req.user?.role === 'ORGANIZER') {
                 if (req.query.myEvents === 'true') {
-                    filters.organizerId = req.user.user_id;
+                    filters.organiserId = req.user.user_id;
                     // If viewing own events, include all statuses
                     filters.status = req.query.status as string;
                 }

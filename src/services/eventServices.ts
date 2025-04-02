@@ -161,8 +161,13 @@ export class EventService {
         }
 
         // 2.6. Organizer filter
-        if (filters.organizerId) {
-            where.organiserId = filters.organizerId;
+        if (filters.organiserId) {
+            where.organiserId = filters.organiserId;
+        }
+
+        //2.7 - Free event filter
+        if (filters.isFree) {
+            where.isFree = filters.isFree;
         }
 
 

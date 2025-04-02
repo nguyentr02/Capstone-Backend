@@ -37,7 +37,7 @@ export interface TokenResponse {
 
 // Decoded refresh token structure
 export interface RefreshTokenPayload {
-    user_id: number;
+    userId: number;
     iat?: number;
     exp?: number;
 }

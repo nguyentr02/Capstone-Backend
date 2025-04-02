@@ -1,7 +1,7 @@
 import {Router} from 'express';
 import { EventController } from '../controllers/eventController';
-import { authorize, authenticate } from '../middlewares/authMiddlewares';
-import { validateEventCreation} from '../middlewares/eventValidation';
+import { authorize, authenticate, validateRequest } from '../middlewares/authMiddlewares';
+import { createEventSchema } from '../validation/eventValidation';
 
 const router = Router();
 
@@ -12,6 +12,7 @@ router.get('/:id', EventController.getEventById);
 // Protected routes (organizers only)
 router.post('/', 
     authenticate, 
+    // validateRequest(createEventSchema),
     EventController.createEvent);
 
 router.put('/:id', 

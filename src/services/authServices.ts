@@ -10,7 +10,7 @@ export class AuthService {
     //------ Utility functions
     private static generateAccessToken(user: any): string{
         return jwt.sign(
-            {user: user.user_id, role: user.role},
+            {userId: user.id, role: user.role},
             process.env.JWT_SECRET!,
             {expiresIn: "1h"} 
         )
@@ -103,7 +103,7 @@ export class AuthService {
             ) as RefreshTokenPayload;
             
             // Find the user
-            const user = await prisma.user.findUnique({ where: { id: payload.user_id } });
+            const user = await prisma.user.findUnique({ where: { id: payload.userId } });
             if (!user) {throw new AuthenticationError('Invalid refresh token');}
 
             // Generate new tokens

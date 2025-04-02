@@ -49,7 +49,7 @@ export interface EventFilters {
     startDate?: Date;
     endDate?: Date;
     location?: string;
-    organizerId?: number;
+    organiserId?: number;
     status?: string;
     isFree?: boolean;
 }
