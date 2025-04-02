@@ -36,6 +36,7 @@ describe('EventService', () => {
     description: "This is a test event",
     location: "Test Location",
     capacity: 100,
+    isFree: false,
     eventType: "SOCIAL",
     startDateTime: new Date(Date.now() + 86400000), // Tomorrow
     endDateTime: new Date(Date.now() + 172800000), // Day after tomorrow
