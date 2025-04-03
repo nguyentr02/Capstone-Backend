@@ -64,8 +64,10 @@ export class EventController {
                 search: req.query.search as string,
                 eventType: req.query.eventType as string,
                 location: req.query.location as string,
-                isFree: req.query.isFree === 'true' ? true :
-                    req.query.isFree === 'false' ? false : undefined
+                isFree: req.query.isFree === 'true' ? true : 
+                    req.query.isFree === 'false' ? false : undefined,
+                myEvents: req.query.myEvents === 'true' ? true : false,
+                isAdmin: req.user?.role === 'ADMIN' ? true : false
             };
 
             //3. Handle date filters

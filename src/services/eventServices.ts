@@ -130,8 +130,11 @@ export class EventService {
             where.status = filters.status;
         }
         else {
+            // Default to only showing PUBLISHED events for non-admins/non-owners
+            // If user is admin or checking their own events, this will be overridden
             where.status = "PUBLISHED";
         }
+        
 
         // 2.2. Text search filter
         if (filters.search) {
@@ -161,17 +164,26 @@ export class EventService {
         }
 
         // 2.6. Organizer filter
-        if (filters.organiserId !== undefined) {
-            // Look for the organizer ID in the event's organizer relation
-            where.organizerId = filters.organiserId;
+        if (filters.organiserId) {
+            
+            // If organizer is looking at their own events, show all statuses unless filtered
+            where.organiserId = filters.organiserId;
+            
+            if (!filters.status) {
+                delete where.status; // Remove the PUBLISHED filter
+            }
+        }
+
+        // Admin override - if user is admin and myEvents is true (special flag for admin-only view)
+        if (filters.isAdmin && filters.myEvents === true) {
+            // Allow admins to see all events if requested
+            delete where.status; 
         }
 
         //2.7 - Free event filter
-        if (filters.isFree !== undefined) {
+        if (filters.isFree) {
             where.isFree = filters.isFree;
         }
-        else filters.isFree = undefined; // Set to undefined if not provided
-
 
         //3. Get the events with the filters and pagination
         const [events, total] = await Promise.all([
@@ -200,7 +212,7 @@ export class EventService {
                     }
                 }
             }),
-            prisma.event.count({ where: {} }) // Count the total number of events
+            prisma.event.count({ where }) // Count the total number of events
         ]);
 
         // 4. Return the events and total count with pagination

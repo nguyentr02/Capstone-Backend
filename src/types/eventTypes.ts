@@ -52,6 +52,8 @@ export interface EventFilters {
     organiserId?: number;
     status?: string;
     isFree?: boolean;
+    myEvents?: boolean;
+    isAdmin?: boolean;
 }
 
 // Ticket response interface
