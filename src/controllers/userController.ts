@@ -6,8 +6,7 @@ export class UserController {
     // 01 - Get user profile
     static async getUserProfile(req: Request, res: Response) : Promise<void> {
         try {
-            const userId = req.user?.user_id;
-            console.log('ID:', userId)
+            const userId = req.user?.userId;
             if (!userId) {
                 res.status(401).json({
                     success: false,
@@ -37,7 +36,7 @@ export class UserController {
     // 02 - Update user profile
     static async updateUserProfile(req: Request, res: Response) : Promise<void> {
         try {
-            const userId = req.user?.user_id;
+            const userId = req.user?.userId;
             if (!userId) {
                 res.status(401).json({
                     success: false,
@@ -69,7 +68,7 @@ export class UserController {
     static async updateUserPassword(req: Request, res: Response) : Promise<void> {
         try {
 
-            const userId = req.user?.user_id;
+            const userId = req.user?.userId;
             if (!userId) {
                 res.status(401).json({
                     success: false,

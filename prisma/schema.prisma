@@ -63,7 +63,7 @@ enum PaymentStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement()) @map("user_id")
+  id        Int      @id @default(autoincrement()) @map("id")
   firstName String   @map("first_name")
   lastName  String   @map("last_name")
   email     String   @unique
@@ -76,18 +76,20 @@ model User {
   // Relations
   organizedEvents Event[]        @relation("EventOrganizer")
   registrations   Registration[]
+  participants Participant[] 
 
   @@map("users")
 }
 
 model Event {
-  id            Int         @id @default(autoincrement()) @map("event_id")
+  id            Int         @id @default(autoincrement()) @map("id")
   organiserId   Int         @map("organiser_id")
   name          String
   description   String?     @db.Text
   location      String
   capacity      Int
   eventType     EventType   @map("event_type")
+  isFree        Boolean     @default(false) @map("is_free")
   startDateTime DateTime    @map("start_datetime")
   endDateTime   DateTime    @map("end_datetime")
   status        EventStatus @default(DRAFT)
@@ -104,7 +106,7 @@ model Event {
 }
 
 model Question {
-  id              Int          @id @default(autoincrement()) @map("question_id")
+  id              Int          @id @default(autoincrement()) @map("id")
   questionText    String       @map("question_text") @db.Text
   questionType    QuestionType @default(TEXT) @map("question_type")
   category        String?
@@ -119,7 +121,7 @@ model Question {
 }
 
 model EventQuestions {
-  id           Int     @id @default(autoincrement()) @map("event_question_id")
+  id           Int     @id @default(autoincrement()) @map("id")
   eventId      Int     @map("event_id")
   questionId   Int     @map("question_id")
   isRequired   Boolean @default(false) @map("is_required")
@@ -137,7 +139,7 @@ model EventQuestions {
 }
 
 model Response {
-  id             Int    @id @default(autoincrement()) @map("response_id")
+  id             Int    @id @default(autoincrement()) @map("id")
   registrationId Int    @map("registration_id")
   eqId           Int    @map("eq_id")
   responseText   String @map("response_text") @db.Text
@@ -152,18 +154,46 @@ model Response {
   @@map("responses")
 }
 
+model Participant {
+  id            Int          @id @default(autoincrement()) @map("id")
+  email         String       
+  firstName     String       @map("first_name")
+  lastName      String       @map("last_name")
+  phoneNumber    String?   @map("phone_number")
+  dateOfBirth    DateTime? @map("date_of_birth")
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?   @map("zip_code")
+  country        String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  registrations  Registration[]
+  userId         Int?      @map("user_id") // Optional link to user account
+  user           User?     @relation(fields: [userId], references: [id])
+
+  @@unique([email])
+  @@index([city, state, country])
+  @@map("participants")
+}
+
 model Registration {
-  id      Int                @id @default(autoincrement()) @map("registration_id")
-  userId  Int?               @map("user_id")
-  eventId Int                @map("event_id")
-  status  RegistrationStatus @default(PENDING)
+  id                Int                @id @default(autoincrement()) @map("id")
+  eventId           Int                @map("event_id")
+  participantId     Int                @map("participant_id")
+  userId            Int?               @map("user_id")
+  status            RegistrationStatus @default(PENDING)
 
   created_at DateTime @default(now()) @map("created_at")
   updated_at DateTime @updatedAt @map("updated_at")
 
   // Relations
-  user      User?      @relation(fields: [userId], references: [id])
+  
   event     Event      @relation(fields: [eventId], references: [id])
+  participant Participant @relation(fields: [participantId], references: [id])
+  user      User?      @relation(fields: [userId], references: [id])
   purchase  Purchase?
   responses Response[]
 
@@ -171,7 +201,7 @@ model Registration {
 }
 
 model Ticket {
-  id            Int          @id @default(autoincrement()) @map("ticket_id")
+  id            Int          @id @default(autoincrement()) @map("id")
   eventId       Int          @map("event_id")
   name          String
   description   String?      @db.Text
@@ -192,7 +222,7 @@ model Ticket {
 }
 
 model Purchase {
-  id             Int     @id @default(autoincrement()) @map("purchase_id")
+  id             Int     @id @default(autoincrement()) @map("id")
   registrationId Int     @unique @map("registration_id")
   ticketId       Int     @unique @map("ticket_id")
   quantity       Int
@@ -211,7 +241,7 @@ model Purchase {
 }
 
 model Payment {
-  id            Int           @id @default(autoincrement()) @map("payment_id")
+  id            Int           @id @default(autoincrement()) @map("id")
   purchaseId    Int           @unique @map("purchase_id")
   amount        Decimal       @db.Decimal(10, 2)
   paymentMethod PaymentMethod @map("payment_method")

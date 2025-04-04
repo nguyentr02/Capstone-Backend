@@ -37,14 +37,14 @@ export interface TokenResponse {
 
 // Decoded refresh token structure
 export interface RefreshTokenPayload {
-    user_id: number;
+    userId: number;
     iat?: number;
     exp?: number;
 }
 
 // JWT Payload structure for access token
 export interface JwtPayload {
-    user_id: number;
+    userId: number;
     role: UserRole;
     iat?: number;
     exp?: number;
