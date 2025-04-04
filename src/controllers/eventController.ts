@@ -66,8 +66,6 @@ export class EventController {
                 location: req.query.location as string,
                 isFree: req.query.isFree === 'true' ? true : 
                     req.query.isFree === 'false' ? false : undefined,
-                myEvents: req.query.myEvents === 'true' ? true : false,
-                isAdmin: req.user?.role === 'ADMIN' ? true : false
             };
 
             //3. Handle date filters
@@ -79,17 +77,38 @@ export class EventController {
                 filters.endDate = new Date(req.query.endDate as string);
             }
 
-            //4. For organizers, allow viewing their own events including drafts
-            if (req.user?.role === 'ORGANIZER') {
-                if (req.query.myEvents === 'true') {
-                    filters.organiserId = req.user.userId;
-                    // If viewing own events, include all statuses
-                    filters.status = req.query.status as string;
+            console.log('User role:', req.user?.role);
+            console.log('Query params:', req.query);
+
+            // Apply specific filtering based on user role
+            if (req.user) {
+                if (req.user.role === 'ADMIN') {
+                    console.log('User is an admin');
+                    filters.isAdmin = true;
+                    filters.adminView = req.query.adminView === 'true'; // Admin view toggle - only when explicitly requested
+                } 
+                else if (req.user.role === 'ORGANIZER') {
+                    console.log('User is an organizer');
+                    filters.isOrganiser = true;
+                    if (req.query.myEvents === 'true') { // For organizers viewing their own events
+                        console.log('Organizer viewing own events');
+                        filters.organiserId = req.user.userId;
+                        filters.myEvents = true;
+                        
+                        // Use specified status if provided
+                        if (req.query.status) {
+                            filters.status = req.query.status as string;
+                        }
+                    }
                 }
-            } else {
-                // Non-organizers can only see published events
+                // PARTICIPANT role doesn't get special filtering
+            }
+            else {
+                console.log('User is not authenticated, public access');
                 filters.status = 'PUBLISHED';
             }
+
+            console.log('Final filters:', filters);
 
             // Get events from service
             const result = await EventService.getAllEvents({ page, limit, filters });

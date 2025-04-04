@@ -134,7 +134,22 @@ export class EventService {
             // If user is admin or checking their own events, this will be overridden
             where.status = "PUBLISHED";
         }
-        
+
+        // Handle admin view - admins can see all events in all statuses
+        if (filters.isAdmin && filters.adminView === true) {
+            console.log('Admin view enabled, removing status filter');
+            delete where.status; // Remove the status filter for admin view
+        }
+        // Handle organizer view - organizers can see their own events in all statuses
+        else if (filters.isOrganiser && filters.organiserId) {         
+            where.organiserId = filters.organiserId;
+    
+            // Organizers can see all statuses of their own events
+            if (filters.myEvents === true && !filters.status) {
+                console.log('Removing status filter for organizer view');
+                delete where.status;
+            }
+        }
 
         // 2.2. Text search filter
         if (filters.search) {
@@ -163,27 +178,12 @@ export class EventService {
             where.endDateTime = { lte: filters.endDate };
         }
 
-        // 2.6. Organizer filter
-        if (filters.organiserId) {
-            
-            // If organizer is looking at their own events, show all statuses unless filtered
-            where.organiserId = filters.organiserId;
-            
-            if (!filters.status) {
-                delete where.status; // Remove the PUBLISHED filter
-            }
-        }
-
-        // Admin override - if user is admin and myEvents is true (special flag for admin-only view)
-        if (filters.isAdmin && filters.myEvents === true) {
-            // Allow admins to see all events if requested
-            delete where.status; 
-        }
-
-        //2.7 - Free event filter
+        //2.6 - Free event filter
         if (filters.isFree) {
             where.isFree = filters.isFree;
         }
+
+        console.log('Final where filters:', where);
 
         //3. Get the events with the filters and pagination
         const [events, total] = await Promise.all([
@@ -475,7 +475,7 @@ export class EventService {
             throw new Error('Cancelled events can only be restored to draft status');
         }
 
-        // For publishing, verify the event has questions and tickets (if paid)
+        // 01 - For publishing, verify the event has questions and tickets (if paid)
         if (status === 'PUBLISHED') {
 
             // Get question count
@@ -498,7 +498,7 @@ export class EventService {
             }
         }
 
-        // For cancellation, handle existing registrations
+        // 02 - For cancellation, handle existing registrations
         if (status === 'CANCELLED' && existingEvent.status === 'PUBLISHED') {
             const registrationCount = await prisma.registration.count({
                 where: { eventId }

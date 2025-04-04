@@ -54,6 +54,8 @@ export interface EventFilters {
     isFree?: boolean;
     myEvents?: boolean;
     isAdmin?: boolean;
+    isOrganiser?: boolean;
+    adminView?: boolean;
 }
 
 // Ticket response interface
