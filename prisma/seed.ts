@@ -180,8 +180,113 @@ async function createBasicQuestionsForEvent(eventId: number) {
     }
   });
   
-  return question;
+  await prisma.eventQuestions.create({
+    data: {
+      eventId,
+      questionId: q2.id,
+      isRequired: false,
+      displayOrder: 2
+    }
+  });
+  
+  // Add extra questions for some events
+  if (includeExtras) {
+    const q3 = await prisma.question.create({
+      data: {
+        questionText: 'How did you hear about this event?',
+        questionType: 'TEXT'
+      }
+    });
+    
+    await prisma.eventQuestions.create({
+      data: {
+        eventId,
+        questionId: q3.id,
+        isRequired: false,
+        displayOrder: 3
+      }
+    });
+  }
 }
+
+// async function createRegistrationsAndResponses(participants: any[], eventId: number) {
+//   // Get tickets for the event
+//   const tickets = await prisma.ticket.findMany({
+//     where: { eventId }
+//   });
+  
+//   if (!tickets.length) return;
+  
+//   // Get event questions
+//   const eventQuestions = await prisma.eventQuestions.findMany({
+//     where: { eventId },
+//     include: { question: true }
+//   });
+  
+//   // Create registrations for first 3 participants
+//   for (let i = 0; i < Math.min(3, participants.length); i++) {
+//     // Create registration
+//     const registration = await prisma.registration.create({
+//       data: {
+//         userId: participants[i].id,
+//         eventId,
+//         status: 'CONFIRMED'
+//       }
+//     });
+    
+//     // Create ticket purchase
+//     const selectedTicket = tickets[i % tickets.length];
+//     const purchase = await prisma.purchase.create({
+//       data: {
+//         registrationId: registration.id,
+//         ticketId: selectedTicket.id,
+//         quantity: 1,
+//         unitPrice: selectedTicket.price,
+//         totalPrice: selectedTicket.price
+//       }
+//     });
+    
+//     // Create payment
+//     await prisma.payment.create({
+//       data: {
+//         purchaseId: purchase.id,
+//         amount: selectedTicket.price,
+//         paymentMethod: 'CREDIT_CARD',
+//         status: 'COMPLETED'
+//       }
+//     });
+    
+//     // Create responses to questions
+//     for (const eq of eventQuestions) {
+//       let responseText = '';
+      
+//       if (eq.question.questionType === 'MULTIPLE_CHOICE' && 
+//           eq.question.questionText.includes('t-shirt')) {
+//         const sizes = ['S', 'M', 'L', 'XL'];
+//         responseText = sizes[Math.floor(Math.random() * sizes.length)];
+//       } else if (eq.question.questionText.includes('dietary')) {
+//         const options = ['None', 'Vegetarian', 'Vegan', 'Gluten-free'];
+//         responseText = options[Math.floor(Math.random() * options.length)];
+//       } else {
+//         responseText = 'Sample response';
+//       }
+      
+//       await prisma.response.create({
+//         data: {
+//           registrationId: registration.id,
+//           eqId: eq.id,
+//           responseText
+//         }
+//       });
+//     }
+    
+//     // Update ticket sold count
+//     await prisma.ticket.update({
+//       where: { id: selectedTicket.id },
+//       data: { quantitySold: { increment: 1 } }
+//     });
+//   }
+// }
 
 // Execute the seeding function
 main()

@@ -14,13 +14,56 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+        console.log('Decoded token payload:', decoded); // See what's in the token
 
         req.user = decoded;
+        console.log('User from token:', req.user); // Check if user is set correctly
+
+        // Ensure the decoded token has the expected structure
+        if (!decoded.userId) {
+            throw new AuthenticationError('Invalid token format');
+        }
+
+        
 
         next();
     }
     catch (error) {
-        next(error);
+        if (error instanceof jwt.JsonWebTokenError) {
+            next(new AuthenticationError('Invalid token'));
+        } else {
+            next(error);
+        }
+    }
+}
+
+export const optionalAuthenticate = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+
+        if (!token) {
+            // No token provided, continue as public access
+            console.log('No token provided, continuing as public access');
+            next();
+            return;
+        }
+
+        // Token provided, try to verify it
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+            req.user = decoded;
+            console.log('User authenticated:', req.user);
+            next();
+        } catch (tokenError) {
+            // Invalid token, but continue as public access
+            console.log('Token verification failed, continuing as public access');
+            next();
+        }
+    }
+    catch (error) {
+        // Any other error, continue as public access
+        console.log('Authentication error, continuing as public access');
+        next();
     }
 }
 

@@ -1,3 +1,4 @@
+import { Decimal } from "@prisma/client/runtime/library";
 
 // DTO for creating new events
 export interface CreateEventDTO {
@@ -48,7 +49,29 @@ export interface EventFilters {
     startDate?: Date;
     endDate?: Date;
     location?: string;
-    organizerId?: number;
+    organiserId?: number;
     status?: string;
     isFree?: boolean;
+    myEvents?: boolean;
+    isAdmin?: boolean;
+    isOrganiser?: boolean;
+    adminView?: boolean;
 }
+
+// Ticket response interface
+// This interface should match the structure of the ticket data returned from the database
+export interface TicketResponse {
+    id: number;
+    eventId: number;
+    name: string;
+    description: string | null;
+    price: Decimal; 
+    quantityTotal: number;
+    quantitySold: number;
+    salesStart: Date | null;
+    salesEnd: Date | null;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }
+  
