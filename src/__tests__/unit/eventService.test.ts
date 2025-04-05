@@ -337,6 +337,36 @@ describe('EventService', () => {
               .rejects
               .toThrow('Events must have at least one question before publishing');
       });
+
+      it('should not allow converting a paid event to free', async () => {
+            // Mock data
+            (prisma.event.findUnique as jest.Mock).mockResolvedValue({
+                id: 1, 
+                status: 'DRAFT',
+                isFree: false
+            });
+            
+            // Expect error
+            await expect(EventService.updateEventStatus(1, 'PUBLISHED'))
+                .rejects
+                .toThrow('Paid events cannot be converted to free events');
+      });
+
+      it ('should not allow converting a free event to paid without tickets', async () => {
+            // Mock data
+            (prisma.event.findUnique as jest.Mock).mockResolvedValue({
+                id: 1, 
+                status: 'DRAFT',
+                isFree: true
+            });
+            (prisma.eventQuestions.count as jest.Mock).mockResolvedValue(1);
+            (prisma.ticket.count as jest.Mock).mockResolvedValue(0);
+            
+            // Expect error
+            await expect(EventService.updateEventStatus(1, 'PUBLISHED'))
+                .rejects
+                .toThrow('Paid events must have at least one ticket type');
+        });
     });
 
     describe('getEventById', () => {});
