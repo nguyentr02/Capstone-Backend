@@ -1,3 +1,5 @@
+import { TicketStatus } from '@prisma/client';
+
 export interface CreateTicketDTO {
     eventId: number;
     name: string;
@@ -15,5 +17,6 @@ export interface UpdateTicketDTO {
     quantityTotal?: number;
     salesStart?: Date | string;
     salesEnd?: Date | string;
-    status?: 'ACTIVE' | 'INACTIVE' | 'SOLD_OUT';
+    status?: TicketStatus;
+    quantitySold?: number;
 }
