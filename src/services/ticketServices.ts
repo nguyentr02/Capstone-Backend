@@ -71,11 +71,11 @@ export class TicketService {
                 throw new ValidationError('Sales end date must be after sales start date');
             }
         } else if (ticketData.salesStart && !ticketData.salesEnd) {
-            if (new Date(ticket.salesEnd) <= new Date(ticketData.salesStart)) {
+            if (ticket.salesEnd && new Date(ticket.salesEnd) <= new Date(ticketData.salesStart)) {
                 throw new ValidationError('Sales end date must be after sales start date');
             }
         } else if (!ticketData.salesStart && ticketData.salesEnd) {
-            if (new Date(ticketData.salesEnd) <= new Date(ticket.salesStart)) {
+            if (ticket.salesStart && new Date(ticketData.salesEnd) <= new Date(ticket.salesStart)) {
                 throw new ValidationError('Sales end date must be after sales start date');
             }
         }
@@ -212,7 +212,7 @@ export class TicketService {
         }
 
         // Check sales period
-        if (now < new Date(ticket.salesStart)) {
+        if (ticket.salesStart && now < new Date(ticket.salesStart)) {
             return {
                 available: false,
                 availableQuantity: 0,
@@ -220,7 +220,7 @@ export class TicketService {
             };
         }
 
-        if (now > new Date(ticket.salesEnd)) {
+        if (ticket.salesEnd && now > new Date(ticket.salesEnd)) {
             return {
                 available: false,
                 availableQuantity: 0,
