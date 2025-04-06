@@ -140,9 +140,9 @@ export class EventService {
             delete where.status; // Remove the status filter for admin view
         }
         // Handle organizer view - organizers can see their own events in all statuses
-        else if (filters.isOrganiser && filters.organiserId) {         
+        else if (filters.isOrganiser && filters.organiserId) {
             where.organiserId = filters.organiserId;
-    
+
             // Organizers can see all statuses of their own events
             if (filters.myEvents === true && !filters.status) {
                 console.log('Removing status filter for organizer view');
