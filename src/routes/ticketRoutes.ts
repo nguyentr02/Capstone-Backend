@@ -15,14 +15,14 @@ router.get('/tickets/:id/availability', TicketController.checkAvailability);
 router.post('/events/:eventId/tickets',
     authenticate,
     authorize('ORGANIZER'),
-    // validateRequest(createTicketSchema),
+    validateRequest(createTicketSchema),
     TicketController.createTicket
 );
 
 router.put('/tickets/:id',
     authenticate,
     authorize('ORGANIZER'),
-    // validateRequest(updateTicketSchema),
+    validateRequest(updateTicketSchema),
     TicketController.updateTicket
 );
 
