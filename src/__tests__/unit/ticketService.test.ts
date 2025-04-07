@@ -466,7 +466,7 @@ describe('TicketService', () => {
                 status: 'ACTIVE',
                 quantityTotal: 100,
                 quantitySold: 50,
-                salesStart: new Date(now.setDate(now.getDate() - 20)),
+                salesStart: new Date('2025-01-01T00:00:00Z'),
                 salesEnd: pastSalesEnd, // Past date
                 event: {
                     status: 'PUBLISHED'
@@ -490,8 +490,8 @@ describe('TicketService', () => {
                 status: 'ACTIVE',
                 quantityTotal: 100,
                 quantitySold: 100, // Sold out
-                salesStart: new Date(now.setDate(now.getDate() - 10)),
-                salesEnd: new Date(now.setDate(now.getDate() + 20)),
+                salesStart: new Date('2025-01-01T00:00:00Z'),
+                salesEnd: new Date('2025-04-10T00:00:00Z'),
                 event: {
                     status: 'PUBLISHED'
                 }
