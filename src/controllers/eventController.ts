@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { EventService } from '../services/eventServices';
-import { CreateEventDTO, EventFilters} from '../types/eventTypes';
+import { CreateEventDTO, EventFilters } from '../types/eventTypes';
 import { ValidationError } from '../utils/errors';
 
 export class EventController {
@@ -13,7 +13,7 @@ export class EventController {
     static async createEvent(req: Request<{}, {}, CreateEventDTO>, res: Response) {
         try {
 
-            
+
             // const organiserId = 2;
             const organiserId = req.user?.userId;
 
@@ -64,7 +64,7 @@ export class EventController {
                 search: req.query.search as string,
                 eventType: req.query.eventType as string,
                 location: req.query.location as string,
-                isFree: req.query.isFree === 'true' ? true : 
+                isFree: req.query.isFree === 'true' ? true :
                     req.query.isFree === 'false' ? false : undefined,
             };
 
@@ -86,7 +86,7 @@ export class EventController {
                     console.log('User is an admin');
                     filters.isAdmin = true;
                     filters.adminView = req.query.adminView === 'true'; // Admin view toggle - only when explicitly requested
-                } 
+                }
                 else if (req.user.role === 'ORGANIZER') {
                     console.log('User is an organizer');
                     filters.isOrganiser = true;
@@ -94,7 +94,7 @@ export class EventController {
                         console.log('Organizer viewing own events');
                         filters.organiserId = req.user.userId;
                         filters.myEvents = true;
-                        
+
                         // Use specified status if provided
                         if (req.query.status) {
                             filters.status = req.query.status as string;
