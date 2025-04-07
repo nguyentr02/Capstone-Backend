@@ -1,9 +1,8 @@
-// src/routes/ticketRoutes.ts
 import { Router } from 'express';
 import { TicketController } from '../controllers/ticketController';
 import { authenticate, authorize, optionalAuthenticate } from '../middlewares/authMiddlewares';
 import { validateRequest } from '../middlewares/authMiddlewares';
-// import { createTicketSchema, updateTicketSchema } from '../validation/ticketValidation';
+import { createTicketSchema, updateTicketSchema } from '../validation/ticketValidation';
 
 const router = Router();
 

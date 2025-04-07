@@ -1,4 +1,3 @@
-// src/services/ticketServices.ts
 import { prisma } from '../config/prisma';
 import { Ticket } from '@prisma/client';
 import { ValidationError } from '../utils/errors';
