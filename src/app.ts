@@ -7,11 +7,17 @@ import eventRoutes from './routes/eventRoutes';
 import userRoutes from './routes/userRoutes';
 import ticketRoutes from './routes/ticketRoutes';
 
+import swaggerUi from 'swagger-ui-express';
+import specs from './config/swagger';
+
 // Importing middlewares
 const app = express();
 
 app.use(express.json());  // Middleware to parse JSON body
 app.use(cookieParser());  // Middleware to parse cookies
+
+// Swagger UI route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Use routes
 app.use('/api/auth', authRoutes);
