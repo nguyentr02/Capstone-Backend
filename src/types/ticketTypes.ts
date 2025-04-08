@@ -1,4 +1,4 @@
-import { TicketStatus } from '@prisma/client';
+import { Ticket, TicketStatus } from '@prisma/client';
 
 export interface CreateTicketDTO {
     eventId: number;
@@ -16,7 +16,8 @@ export interface UpdateTicketDTO {
     price?: number;
     quantityTotal?: number;
     salesStart?: Date | string;
-    salesEnd?: TicketStatus;
+    salesEnd?: Date | string;
+    status?: TicketStatus;
 }
 
 /**
