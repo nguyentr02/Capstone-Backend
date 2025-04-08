@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { TicketController } from '../controllers/ticketController';
 import { authenticate, authorize, optionalAuthenticate } from '../middlewares/authMiddlewares';
 import { validateRequest } from '../middlewares/authMiddlewares';
+import { verifyEventOwnership, verifyTicketOwnership } from '../middlewares/eventOwnershipMiddleware';
 import { createTicketSchema, updateTicketSchema } from '../validation/ticketValidation';
 
 const router = Router();
@@ -144,6 +145,7 @@ router.post('/events/:eventId/tickets',
     authenticate,
     authorize('ORGANIZER'),
     validateRequest(createTicketSchema),
+    verifyEventOwnership,
     TicketController.createTicket
 );
 
@@ -203,6 +205,7 @@ router.put('/tickets/:id',
     authenticate,
     authorize('ORGANIZER'),
     validateRequest(updateTicketSchema),
+    verifyTicketOwnership,
     TicketController.updateTicket
 );
 
@@ -256,6 +259,7 @@ router.put('/tickets/:id',
 router.delete('/tickets/:id',
     authenticate,
     authorize('ORGANIZER'),
+    verifyTicketOwnership,
     TicketController.deleteTicket
 );
 

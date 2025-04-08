@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { EventController } from '../controllers/eventController';
 import { authorize, authenticate, validateRequest, optionalAuthenticate } from '../middlewares/authMiddlewares';
+import { verifyEventOwnership } from '../middlewares/eventOwnershipMiddleware';
 import { createEventSchema } from '../validation/eventValidation';
 
 const router = Router();
@@ -227,6 +228,7 @@ router.post('/',
 router.put('/:id',
     authenticate,
     authorize('ORGANIZER', 'ADMIN'),
+    verifyEventOwnership,
     EventController.updateEvent);
 
 /**
@@ -285,6 +287,7 @@ router.put('/:id',
 router.patch('/:id/status',
     authenticate,
     authorize('ORGANIZER', 'ADMIN'),
+    verifyEventOwnership,
     EventController.updateEventStatus
 );
 
@@ -330,6 +333,7 @@ router.patch('/:id/status',
 router.delete('/:id',
     authenticate,
     authorize('ORGANIZER', 'ADMIN'),
+    verifyEventOwnership,
     EventController.deleteEvent);
 
 

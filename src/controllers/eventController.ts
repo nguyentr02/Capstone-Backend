@@ -12,9 +12,6 @@ export class EventController {
      */
     static async createEvent(req: Request<{}, {}, CreateEventDTO>, res: Response) {
         try {
-
-
-            // const organiserId = 2;
             const organiserId = req.user?.userId;
 
             if (!organiserId) {
@@ -171,28 +168,16 @@ export class EventController {
     static async updateEvent(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
-            const userId = req.user?.userId;
 
             if (isNaN(eventId)) {
                 res.status(400).json({
                     success: false,
                     message: 'Invalid event ID'
                 });
+                return;
             }
 
-            //Verify ownership if not admin
-            if (req.user?.role !== 'ADMIN') {
-                const event = await EventService.getEventById(eventId);
-
-                if (event.organiserId !== userId) {
-                    res.status(403).json({
-                        success: false,
-                        message: 'You are not authorized to update this event'
-                    });
-                }
-            }
-
-            // Update event
+            // Update event (ownership verification is now handled by middleware)
             const event = await EventService.updateEvent(eventId, req.body);
 
             res.status(200).json({
@@ -221,25 +206,13 @@ export class EventController {
         try {
             const eventId = Number(req.params.id);
             const status = req.body.status;
-            const userId = req.user?.userId;
 
             if (isNaN(eventId)) {
                 res.status(400).json({
                     success: false,
                     message: 'Invalid event ID'
                 });
-            }
-
-            // Verify ownership if not admin
-            if (req.user?.role !== 'ADMIN') {
-                const event = await EventService.getEventById(eventId);
-
-                if (event.organiserId !== userId) {
-                    res.status(403).json({
-                        success: false,
-                        message: 'You are not authorized to update this event'
-                    });
-                }
+                return;
             }
 
             // Validate status
@@ -248,9 +221,10 @@ export class EventController {
                     success: false,
                     message: 'Invalid status. Must be DRAFT, PUBLISHED, or CANCELLED'
                 });
+                return;
             }
 
-            // Update event status
+            // Update event status (ownership verification is now handled by middleware)
             const event = await EventService.updateEventStatus(eventId, status);
 
             res.status(200).json({
@@ -278,7 +252,6 @@ export class EventController {
     static async deleteEvent(req: Request, res: Response) {
         try {
             const eventId = Number(req.params.id);
-            const userId = req.user?.userId;
 
             //Validate event ID
             if (isNaN(eventId)) {
@@ -286,21 +259,10 @@ export class EventController {
                     success: false,
                     message: 'Invalid event ID'
                 });
+                return;
             }
 
-            //Verify ownership if not admin
-            if (req.user?.role !== 'ADMIN') {
-                const event = await EventService.getEventById(eventId);
-
-                if (event.organiserId !== userId) {
-                    res.status(403).json({
-                        success: false,
-                        message: 'You are not authorized to delete this event'
-                    });
-                }
-            }
-
-            // Delete event
+            // Delete event (ownership verification is now handled by middleware)
             await EventService.deleteEvent(eventId);
 
             res.status(200).json({

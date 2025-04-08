@@ -20,8 +20,7 @@ export class TicketController {
                 return;
             }
 
-            // Verify the user is authorized to manage this event
-            // (This should be handled by middleware)
+            // Event ownership verification is now handled by middleware
             const ticketData: CreateTicketDTO = {
                 ...req.body,
                 eventId
