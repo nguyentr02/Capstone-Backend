@@ -187,7 +187,7 @@ export class EventController {
                 if (event.organiserId !== userId) {
                     res.status(403).json({
                         success: false,
-                        message: 'You are not authorized to delete this event'
+                        message: 'You are not authorized to update this event'
                     });
                 }
             }
