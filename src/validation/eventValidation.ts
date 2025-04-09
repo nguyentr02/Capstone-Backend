@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-// Base schema for ticket validation
+// 01 - Base schema for ticket validation
 const ticketSchema = Joi.object({
     name: Joi.string().required(),
     description: Joi.string().optional(),
@@ -10,13 +10,14 @@ const ticketSchema = Joi.object({
     salesEnd: Joi.date().greater(Joi.ref('salesStart')).required()
 })
 
-// Base schema for question validation
+// 02 - Base schema for question validation
 const questionSchema = Joi.object({
     questionText: Joi.string().required(),
     isRequired: Joi.boolean().default(false),
     displayOrder: Joi.number().integer().required()
 })
 
+// 03 - Schema for creating events
 export const createEventSchema = Joi.object({
 
     // Event basic information validation
@@ -42,6 +43,7 @@ export const createEventSchema = Joi.object({
     questions: Joi.array().items(questionSchema).min(1).required(),
 });
 
+// 04 - Schema for updating events with optional fields
 export const updateEventSchema = Joi.object({
     // All fields are optional for updates
     name: Joi.string().optional(),
@@ -84,7 +86,7 @@ export const updateEventSchema = Joi.object({
     return value;
 })
 
-// Schema for updating event status
+// 05 - Schema for updating event status
 export const updateEventStatusSchema = Joi.object({
     status: Joi.string().valid('DRAFT, PUBLISHED', 'CANCELLED').required()
 })

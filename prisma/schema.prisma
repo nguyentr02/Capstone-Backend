@@ -63,7 +63,7 @@ enum PaymentStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement()) @map("user_id")
+  id        Int      @id @default(autoincrement()) @map("id")
   firstName String   @map("first_name")
   lastName  String   @map("last_name")
   email     String   @unique
@@ -82,7 +82,7 @@ model User {
 }
 
 model Event {
-  id            Int         @id @default(autoincrement()) @map("event_id")
+  id            Int         @id @default(autoincrement()) @map("id")
   organiserId   Int         @map("organiser_id")
   name          String
   description   String?     @db.Text
@@ -106,7 +106,7 @@ model Event {
 }
 
 model Question {
-  id              Int          @id @default(autoincrement()) @map("question_id")
+  id              Int          @id @default(autoincrement()) @map("id")
   questionText    String       @map("question_text") @db.Text
   questionType    QuestionType @default(TEXT) @map("question_type")
   category        String?
@@ -121,7 +121,7 @@ model Question {
 }
 
 model EventQuestions {
-  id           Int     @id @default(autoincrement()) @map("event_question_id")
+  id           Int     @id @default(autoincrement()) @map("id")
   eventId      Int     @map("event_id")
   questionId   Int     @map("question_id")
   isRequired   Boolean @default(false) @map("is_required")
@@ -139,7 +139,7 @@ model EventQuestions {
 }
 
 model Response {
-  id             Int    @id @default(autoincrement()) @map("response_id")
+  id             Int    @id @default(autoincrement()) @map("id")
   registrationId Int    @map("registration_id")
   eqId           Int    @map("eq_id")
   responseText   String @map("response_text") @db.Text
@@ -180,7 +180,7 @@ model Participant {
 }
 
 model Registration {
-  id                Int                @id @default(autoincrement()) @map("registration_id")
+  id                Int                @id @default(autoincrement()) @map("id")
   eventId           Int                @map("event_id")
   participantId     Int                @map("participant_id")
   userId            Int?               @map("user_id")
@@ -201,7 +201,7 @@ model Registration {
 }
 
 model Ticket {
-  id            Int          @id @default(autoincrement()) @map("ticket_id")
+  id            Int          @id @default(autoincrement()) @map("id")
   eventId       Int          @map("event_id")
   name          String
   description   String?      @db.Text
@@ -222,7 +222,7 @@ model Ticket {
 }
 
 model Purchase {
-  id             Int     @id @default(autoincrement()) @map("purchase_id")
+  id             Int     @id @default(autoincrement()) @map("id")
   registrationId Int     @unique @map("registration_id")
   ticketId       Int     @unique @map("ticket_id")
   quantity       Int
@@ -241,7 +241,7 @@ model Purchase {
 }
 
 model Payment {
-  id            Int           @id @default(autoincrement()) @map("payment_id")
+  id            Int           @id @default(autoincrement()) @map("id")
   purchaseId    Int           @unique @map("purchase_id")
   amount        Decimal       @db.Decimal(10, 2)
   paymentMethod PaymentMethod @map("payment_method")

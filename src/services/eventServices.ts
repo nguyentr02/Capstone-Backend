@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { CreateEventDTO, EventFilters, EventResponse } from '../types/eventTypes';
+import { CreateEventDTO, EventFilters, EventResponse, TicketResponse } from '../types/eventTypes';
 
 export class EventService {
 
@@ -24,7 +24,7 @@ export class EventService {
         // Validate tickets only for paid events
         if (!eventData.isFree) {
             if (!eventData.tickets || eventData.tickets.length === 0) {
-                throw new Error('At least one ticket type is required');
+                throw new Error('At least one ticket type is required for paid events');
             }
 
             // Check ticket dates
@@ -38,7 +38,6 @@ export class EventService {
                 }
             }
         }
-
 
         return prisma.$transaction(async (tx) => {
             // 1 - Create the event
@@ -58,7 +57,7 @@ export class EventService {
             });
 
             // 2 - Create the tickets and link them to the event (paid events only)
-            let eventTickets: any = [];
+            let eventTickets: TicketResponse[] = [];
             if (!eventData.isFree && eventData.tickets && eventData.tickets.length > 0) {
                 eventTickets = await Promise.all(
                     eventData.tickets.map(async (ticket) => {
@@ -130,7 +129,25 @@ export class EventService {
             where.status = filters.status;
         }
         else {
+            // Default to only showing PUBLISHED events for non-admins/non-owners
+            // If user is admin or checking their own events, this will be overridden
             where.status = "PUBLISHED";
+        }
+
+        // Handle admin view - admins can see all events in all statuses
+        if (filters.isAdmin && filters.adminView === true) {
+            console.log('Admin view enabled, removing status filter');
+            delete where.status; // Remove the status filter for admin view
+        }
+        // Handle organizer view - organizers can see their own events in all statuses
+        else if (filters.isOrganiser && filters.organiserId) {
+            where.organiserId = filters.organiserId;
+
+            // Organizers can see all statuses of their own events
+            if (filters.myEvents === true && !filters.status) {
+                console.log('Removing status filter for organizer view');
+                delete where.status;
+            }
         }
 
         // 2.2. Text search filter
@@ -148,7 +165,7 @@ export class EventService {
 
         // 2.4. Location filter
         if (filters.location) {
-            where.eventType = filters.location;
+            where.location = { contains: filters.location };
         }
 
         // 2.5. Date filters
@@ -160,11 +177,12 @@ export class EventService {
             where.endDateTime = { lte: filters.endDate };
         }
 
-        // 2.6. Organizer filter
-        if (filters.organizerId) {
-            where.organiserId = filters.organizerId;
+        //2.6 - Free event filter
+        if (filters.isFree) {
+            where.isFree = filters.isFree;
         }
 
+        console.log('Final where filters:', where);
 
         //3. Get the events with the filters and pagination
         const [events, total] = await Promise.all([
@@ -193,7 +211,7 @@ export class EventService {
                     }
                 }
             }),
-            prisma.event.count({ where: {} }) // Count the total number of events
+            prisma.event.count({ where }) // Count the total number of events
         ]);
 
         // 4. Return the events and total count with pagination
@@ -456,7 +474,7 @@ export class EventService {
             throw new Error('Cancelled events can only be restored to draft status');
         }
 
-        // For publishing, verify the event has questions and tickets (if paid)
+        // 01 - For publishing, verify the event has questions and tickets (if paid)
         if (status === 'PUBLISHED') {
 
             // Get question count
@@ -479,7 +497,7 @@ export class EventService {
             }
         }
 
-        // For cancellation, handle existing registrations
+        // 02 - For cancellation, handle existing registrations
         if (status === 'CANCELLED' && existingEvent.status === 'PUBLISHED') {
             const registrationCount = await prisma.registration.count({
                 where: { eventId }
