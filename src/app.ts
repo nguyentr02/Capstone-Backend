@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes';
 import eventRoutes from './routes/eventRoutes';
 import userRoutes from './routes/userRoutes';
 import ticketRoutes from './routes/ticketRoutes';
+import registrationRoutes from './routes/registrationRoutes'; // Added import
 
 import swaggerUi from 'swagger-ui-express';
 import specs from './config/swagger';
@@ -24,5 +25,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api', ticketRoutes);
+app.use('/api/registrations', registrationRoutes); // Added registration routes
 
 export default app;
