@@ -49,6 +49,16 @@ export const getRegistrationsQuerySchema = Joi.object({
     limit: Joi.number().integer().min(1).max(100).default(10),
 });
 
+// Validation for getting a single registration by ID (path parameter)
+export const getRegistrationParamsSchema = Joi.object({
+    registrationId: Joi.number().integer().positive().required().messages({
+        'number.base': 'Registration ID must be a number',
+        'number.integer': 'Registration ID must be an integer',
+        'number.positive': 'Registration ID must be a positive number',
+        'any.required': 'Registration ID is required in path'
+    }),
+});
+
 // Validation for cancelling a registration
 export const cancelRegistrationParamsSchema = Joi.object({
     registrationId: Joi.number().integer().positive().required().messages({
