@@ -1,5 +1,6 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import cors from 'cors'; // Import cors middleware
 
 // Importing routes
 import authRoutes from './routes/authRoutes';
@@ -16,6 +17,12 @@ const app = express();
 
 app.use(express.json());  // Middleware to parse JSON body
 app.use(cookieParser());  // Middleware to parse cookies
+
+// Enable CORS for all routes
+app.use(cors({
+    origin: '*', // Allow all origins (for development purposes only)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+}));
 
 // Swagger UI route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

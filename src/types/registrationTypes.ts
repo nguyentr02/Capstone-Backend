@@ -10,4 +10,5 @@ export interface RegistrationDto {
         questionId: number;
         responseText: string;
     }>
+    userId?: number; // Optional, if user is registering through an account
 }
